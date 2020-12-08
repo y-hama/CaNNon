@@ -3,3 +3,8 @@
 ################################################################################
 
 /.vs
+/CaNNon/bin/Debug
+/CaNNon/obj
+/Core/bin/Debug
+/Core/obj
+/packages
