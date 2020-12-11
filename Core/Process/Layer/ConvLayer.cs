@@ -17,6 +17,7 @@ namespace Core.Process.Layer
         {
             forward.Process(Property.GPU,
                 Property.Input, Property.Kernel,
+                Property.Stride,
                 ref Property.Output
                 );
         }
@@ -25,12 +26,18 @@ namespace Core.Process.Layer
         {
             back.Process(Property.GPU,
                 Property.Input, Property.Sigma, Property.Kernel,
+                Property.Stride,
                 ref property.Propagater, ref Property.dKernel);
+            DifferenceSum += Property.Sigma.AbsSum / Property.Sigma.Length;
+            BatchCount++;
         }
 
         public override void Update()
         {
-            Property.Kernel.Update(Property.Rho, Property.dKernel);
+            Property.Kernel.Update(Property.Rho, Property.dKernel, BatchCount);
+            Property.dKernel.Clear();
+            DifferenceSum = 0;
+            BatchCount = 0;
         }
     }
 }

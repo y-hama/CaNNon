@@ -18,7 +18,7 @@ namespace Core.Process.Function
     class ConvBack
     {
         [GpuManaged()]
-        public void Process(Gpu gpu, BufferField input, BufferField sigma, KernelField kernel, ref BufferField propagater, ref KernelField dkernel)
+        public void Process(Gpu gpu, BufferField input, BufferField sigma, KernelField kernel, int stride, ref BufferField propagater, ref KernelField dkernel)
         {
             var iw = input.Width;
             var ih = input.Height;
@@ -43,17 +43,19 @@ namespace Core.Process.Function
             var pc = propagater.Channels;
             var pbuf = propagater.Buffer;
 
+            #region Update Kernel
             gpu.For(0, sc, c =>
             {
-                dkbias[c] = 0;
+                double db = dkbias[c];
+                double ddb = 0;
                 for (int x = 0; x < sw; x++)
                 {
                     for (int y = 0; y < sh; y++)
                     {
-                        dkbias[c] += sbuf[c][x, y];
+                        ddb += sbuf[c][x, y];
                     }
                 }
-                dkbias[c] /= sw * sh * ic;
+                dkbias[c] = db + (ddb / (sw * sh * ic));
             });
 
             gpu.For(0, (2 * dks + 1) * (2 * dks + 1), n =>
@@ -73,8 +75,8 @@ namespace Core.Process.Function
                         {
                             for (int y = 0; y < sh; y++)
                             {
-                                int _x = x + _s;
-                                int _y = y + _t;
+                                int _x = x + _s * stride;
+                                int _y = y + _t * stride;
                                 if (_x >= 0 && _x < iw && _y >= 0 && _y < ih)
                                 {
                                     cnk++;
@@ -86,7 +88,9 @@ namespace Core.Process.Function
                     }
                 }
             });
+            #endregion
 
+            #region Calculate Propagater
             gpu.For(0, propagater.Length, n =>
             {
                 int c = (int)(n / (pw * ph));
@@ -101,8 +105,8 @@ namespace Core.Process.Function
                     {
                         for (int t = dks; t >= -dks; t--)
                         {
-                            int i = x + s;
-                            int j = y + t;
+                            int i = x + s * stride;
+                            int j = y + t * stride;
                             if (i >= 0 && i < sw && j > 0 && j < sh)
                             {
                                 v += sbuf[_c][i, j] * kbuf[_c][c][s + dks, t + dks];
@@ -112,6 +116,7 @@ namespace Core.Process.Function
                 }
                 pbuf[c][x, y] = v;
             });
+            #endregion
         }
     }
 }

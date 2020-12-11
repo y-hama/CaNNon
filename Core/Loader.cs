@@ -22,10 +22,14 @@ namespace Core
             bool usecam = false;
             string folderpath = @"\clothes";
 
-            var size = new Size(160, 160);
+            int batchMax = 5;
+
+            var size = new Size(300, 300);
             var inChannels = 3;
             var outChannels = 3;
-            var kernelsize = 1;
+            var kernelsize = 3;
+            var stride = 2;
+            var rho = 1;
 
             Mat frame = new Mat();
 
@@ -42,9 +46,10 @@ namespace Core
                     gpu,
                     size.Width, size.Height,
                     inChannels, outChannels,
-                    kernelsize));
+                    kernelsize, stride,
+                    rho));
 
-                int gen = 0;
+                int count = 0, epoch = 0;
                 var files = new System.IO.DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + folderpath).GetFiles();
                 int index = 0;
                 while (true)
@@ -57,9 +62,18 @@ namespace Core
                     }
                     else
                     {
-                        frame = new Mat(files[index].FullName);
                         index++;
                         if (index >= files.Length) { index = 0; }
+                        if (count >= batchMax)
+                        {
+                            Console.WriteLine($"e:{epoch++}, {conv.Difference}");
+                            conv.Update();
+                            conv.ShowOutput();
+
+                            count = 0;
+                        }
+                        count++;
+                        frame = new Mat(files[index].FullName);
                     }
 
                     conv.property.Input.ReadFrom(frame);
@@ -68,15 +82,12 @@ namespace Core
                     conv.Forward();
                     conv.property.Output.DifferenceOf(conv.property.Input, ref conv.property.Sigma);
                     conv.Back();
-                    conv.Update();
                     gpuelapsed = gputime.Elapsed();
 
-                    conv.ShowOutput();
                     totalelapsed = totaltime.Elapsed();
-                    Console.WriteLine("{0}, {1}, {2}({3}), {4}({5})", gen++,
-                        conv.property.Sigma.Loss(conv.property.Input), totalelapsed, 1000.0 / totalelapsed, gpuelapsed, 1000.0 / gpuelapsed);
+                    //Console.WriteLine($"g:{gen++}, {totalelapsed}, {gpuelapsed}");
 
-                    GC.Collect();
+                    //GC.Collect();
                 }
             }
         }

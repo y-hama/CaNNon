@@ -38,6 +38,19 @@ namespace Core.Field
             }
         }
 
+        public double AbsSum
+        {
+            get
+            {
+                double sum = 0;
+                for (int c = 0; c < Channels; c++)
+                {
+                    sum += Buffer[c].Cast<double>().Sum(x => Math.Abs(x));
+                }
+                return sum;
+            }
+        }
+
         public double SumRatio
         {
             get

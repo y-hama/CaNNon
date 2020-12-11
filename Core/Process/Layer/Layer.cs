@@ -14,6 +14,10 @@ namespace Core.Process.Layer
         public abstract void Back();
         public abstract void Update();
 
+        protected int BatchCount { get; set; } = 0;
+        protected virtual double DifferenceSum { get; set; }
+        public virtual double Difference { get { return DifferenceSum / BatchCount; } }
+
         public static Layer Load(Property.Property property)
         {
             var layer = (Layer)Activator.CreateInstance(property.Connection);

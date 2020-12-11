@@ -15,7 +15,7 @@ namespace Core.Field
 {
     class KernelField
     {
-        public double[] Bias { get; set; }
+        public int BatchCount { get; set; }        public double[] Bias { get; set; }
         public double[][][,] Buffer { get; set; }
         public int Size { get; set; }
         public int Channels { get; set; }
@@ -82,6 +82,7 @@ namespace Core.Field
 
         public void Clear()
         {
+            BatchCount = 0;
             for (int d = 0; d < Depth; d++)
             {
                 Bias[d] = 0;
@@ -98,28 +99,31 @@ namespace Core.Field
             }
         }
 
-        public void Update(double rho, KernelField dk)
+        public void Update(double rho, KernelField dk, int batch)
         {
-            Update(rho, dk.Bias, dk.Buffer);
+            Update(rho, dk.Bias, dk.Buffer, batch);
         }
 
-        public void Update(double rho, double[] dbias = null, double[][][,] dbuffer = null)
+        public void Update(double rho, double[] dbias = null, double[][][,] dbuffer = null, int batch = 1)
         {
             var _dbias = dbias;
             var _dbuffer = dbuffer;
             if (_dbias == null) { RandomBias(out _dbias); }
             if (_dbuffer == null) { RandomBuffer(out _dbuffer); }
 
-            for (int d = 0; d < Depth; d++)
+            if (batch >= 1)
             {
-                for (int c = 0; c < Channels; c++)
+                for (int d = 0; d < Depth; d++)
                 {
-                    Bias[d] -= rho * _dbias[d];
-                    for (int s = 0; s < Size * 2 + 1; s++)
+                    for (int c = 0; c < Channels; c++)
                     {
-                        for (int t = 0; t < Size * 2 + 1; t++)
+                        Bias[d] -= rho * _dbias[d] / batch;
+                        for (int s = 0; s < Size * 2 + 1; s++)
                         {
-                            Buffer[c][d][s, t] -= rho * _dbuffer[c][d][s, t];
+                            for (int t = 0; t < Size * 2 + 1; t++)
+                            {
+                                Buffer[c][d][s, t] -= rho * _dbuffer[c][d][s, t] / batch;
+                            }
                         }
                     }
                 }
