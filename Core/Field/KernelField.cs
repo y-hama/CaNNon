@@ -10,34 +10,45 @@ using Alea;
 using Alea.Parallel;
 
 using OpenCvSharp;
+using Core.Process.Function;
 
 namespace Core.Field
 {
     class KernelField
     {
-        public int BatchCount { get; set; }        public double[] Bias { get; set; }
-        public double[][][,] Buffer { get; set; }
         public int Size { get; set; }
         public int Channels { get; set; }
         public int Depth { get; set; }
+
+        public double[] Bias { get; set; }
+        public double[][][,] Buffer { get; set; }
+        public double[] dBias { get; set; }
+        public double[][][,] dBuffer { get; set; }
+
+        public Optimizer Optimizer { get; private set; }
 
         private static Random rsrc { get; set; } = new Random();
         private static double RamdomMin { get; set; } = -1;
         private static double RamdomMax { get; set; } = 1;
 
-        public KernelField(int channels, int depth, int size)
+        public KernelField(int channels, int depth, int size, Optimizer opt)
         {
             Channels = channels;
             Depth = depth;
             Size = size;
+            Optimizer = opt;
             Bias = new double[depth];
             Buffer = new double[channels][][,];
+            dBias = new double[depth];
+            dBuffer = new double[channels][][,];
             for (int c = 0; c < channels; c++)
             {
                 Buffer[c] = new double[depth][,];
+                dBuffer[c] = new double[depth][,];
                 for (int d = 0; d < depth; d++)
                 {
                     Buffer[c][d] = new double[2 * size + 1, 2 * size + 1];
+                    dBuffer[c][d] = new double[2 * size + 1, 2 * size + 1];
                 }
             }
         }
@@ -80,31 +91,30 @@ namespace Core.Field
 
         }
 
-        public void Clear()
+        public void dClear()
         {
-            BatchCount = 0;
             for (int d = 0; d < Depth; d++)
             {
-                Bias[d] = 0;
+                dBias[d] = 0;
                 for (int c = 0; c < Channels; c++)
                 {
                     for (int s = 0; s < Size * 2 + 1; s++)
                     {
                         for (int t = 0; t < Size * 2 + 1; t++)
                         {
-                            Buffer[c][d][s, t] = 0;
+                            dBuffer[c][d][s, t] = 0;
                         }
                     }
                 }
             }
         }
 
-        public void Update(double rho, KernelField dk, int batch)
+        public void Update(int batch)
         {
-            Update(rho, dk.Bias, dk.Buffer, batch);
+            Update(dBias, dBuffer, batch);
         }
 
-        public void Update(double rho, double[] dbias = null, double[][][,] dbuffer = null, int batch = 1)
+        public void Update(double[] dbias = null, double[][][,] dbuffer = null, int batch = 1)
         {
             var _dbias = dbias;
             var _dbuffer = dbuffer;
@@ -113,20 +123,7 @@ namespace Core.Field
 
             if (batch >= 1)
             {
-                for (int d = 0; d < Depth; d++)
-                {
-                    for (int c = 0; c < Channels; c++)
-                    {
-                        Bias[d] -= rho * _dbias[d] / batch;
-                        for (int s = 0; s < Size * 2 + 1; s++)
-                        {
-                            for (int t = 0; t < Size * 2 + 1; t++)
-                            {
-                                Buffer[c][d][s, t] -= rho * _dbuffer[c][d][s, t] / batch;
-                            }
-                        }
-                    }
-                }
+                Optimizer.UpdateProcess(this, batch);
             }
         }
 

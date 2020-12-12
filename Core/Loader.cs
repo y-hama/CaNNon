@@ -22,14 +22,14 @@ namespace Core
             bool usecam = false;
             string folderpath = @"\clothes";
 
-            int batchMax = 5;
+            int batchMax = 3;
 
-            var size = new Size(300, 300);
+            var size = new Size(256, 160);
             var inChannels = 3;
             var outChannels = 3;
-            var kernelsize = 3;
-            var stride = 2;
-            var rho = 1;
+            var kernelsize = 1;
+            var stride = 1;
+            var rho = 0.1;
 
             Mat frame = new Mat();
 
@@ -46,11 +46,11 @@ namespace Core
                     gpu,
                     size.Width, size.Height,
                     inChannels, outChannels,
-                    kernelsize, stride,
-                    rho));
+                    stride, kernelsize,
+                    new OptSGD(rho)));
 
-                int count = 0, epoch = 0;
-                var files = new System.IO.DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + folderpath).GetFiles();
+                int gen = 0, count = 0, epoch = 0;
+                System.IO.FileInfo[] files = new System.IO.DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + folderpath).GetFiles();
                 int index = 0;
                 while (true)
                 {
@@ -62,19 +62,26 @@ namespace Core
                     }
                     else
                     {
-                        index++;
-                        if (index >= files.Length) { index = 0; }
-                        if (count >= batchMax)
-                        {
-                            Console.WriteLine($"e:{epoch++}, {conv.Difference}");
-                            conv.Update();
-                            conv.ShowOutput();
-
-                            count = 0;
-                        }
-                        count++;
                         frame = new Mat(files[index].FullName);
                     }
+
+                    index++;
+                    if (index >= files.Length)
+                    {
+                        index = 0;
+                        gen++;
+                        files = new System.IO.DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + folderpath).GetFiles();
+                    }
+                    if (count >= batchMax)
+                    {
+                        Console.WriteLine($"g:{gen}, e:{epoch++}, {conv.Difference}");
+                        conv.Update();
+                        conv.ShowOutput();
+
+                        count = 0;
+                        GC.Collect();
+                    }
+                    count++;
 
                     conv.property.Input.ReadFrom(frame);
 
@@ -87,7 +94,6 @@ namespace Core
                     totalelapsed = totaltime.Elapsed();
                     //Console.WriteLine($"g:{gen++}, {totalelapsed}, {gpuelapsed}");
 
-                    //GC.Collect();
                 }
             }
         }

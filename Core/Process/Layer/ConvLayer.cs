@@ -25,17 +25,17 @@ namespace Core.Process.Layer
         public override void Back()
         {
             back.Process(Property.GPU,
-                Property.Input, Property.Sigma, Property.Kernel,
+                Property.Input, Property.Sigma,
                 Property.Stride,
-                ref property.Propagater, ref Property.dKernel);
+                ref property.Propagater, ref Property.Kernel);
             DifferenceSum += Property.Sigma.AbsSum / Property.Sigma.Length;
             BatchCount++;
         }
 
         public override void Update()
         {
-            Property.Kernel.Update(Property.Rho, Property.dKernel, BatchCount);
-            Property.dKernel.Clear();
+            Property.Kernel.Update(BatchCount);
+            Property.Kernel.dClear();
             DifferenceSum = 0;
             BatchCount = 0;
         }

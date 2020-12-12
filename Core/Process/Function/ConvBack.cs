@@ -18,7 +18,7 @@ namespace Core.Process.Function
     class ConvBack
     {
         [GpuManaged()]
-        public void Process(Gpu gpu, BufferField input, BufferField sigma, KernelField kernel, int stride, ref BufferField propagater, ref KernelField dkernel)
+        public void Process(Gpu gpu, BufferField input, BufferField sigma, int stride, ref BufferField propagater, ref KernelField kernel)
         {
             var iw = input.Width;
             var ih = input.Height;
@@ -34,9 +34,8 @@ namespace Core.Process.Function
             var kbias = kernel.Bias;
             var kbuf = kernel.Buffer;
 
-            var dks = dkernel.Size;
-            var dkbias = dkernel.Bias;
-            var dkbuf = dkernel.Buffer;
+            var dkbias = kernel.dBias;
+            var dkbuf = kernel.dBuffer;
 
             var pw = propagater.Width;
             var ph = propagater.Height;
@@ -58,12 +57,12 @@ namespace Core.Process.Function
                 dkbias[c] = db + (ddb / (sw * sh * ic));
             });
 
-            gpu.For(0, (2 * dks + 1) * (2 * dks + 1), n =>
+            gpu.For(0, (2 * ks + 1) * (2 * ks + 1), n =>
             {
-                int s = (int)(n / (2 * dks + 1));
-                int t = n - s * (2 * dks + 1);
-                int _s = s - dks;
-                int _t = t - dks;
+                int s = (int)(n / (2 * ks + 1));
+                int t = n - s * (2 * ks + 1);
+                int _s = s - ks;
+                int _t = t - ks;
                 for (int c = 0; c < ic; c++)
                 {
                     for (int d = 0; d < sc; d++)
@@ -84,7 +83,7 @@ namespace Core.Process.Function
                                 }
                             }
                         }
-                        dkbuf[c][d][s, t] = dk + ((ddk / (sw * sh * (2 * (dks - 1) + 1))) / DeviceFunction.Sqrt(cnk));
+                        dkbuf[c][d][s, t] = dk + ((ddk / (sw * sh * (2 * (ks - 1) + 1))) / DeviceFunction.Sqrt(cnk));
                     }
                 }
             });
@@ -101,15 +100,15 @@ namespace Core.Process.Function
                 double v = 0;
                 for (int _c = 0; _c < sc; _c++)
                 {
-                    for (int s = dks; s >= -dks; s--)
+                    for (int s = ks; s >= -ks; s--)
                     {
-                        for (int t = dks; t >= -dks; t--)
+                        for (int t = ks; t >= -ks; t--)
                         {
                             int i = x + s * stride;
                             int j = y + t * stride;
                             if (i >= 0 && i < sw && j > 0 && j < sh)
                             {
-                                v += sbuf[_c][i, j] * kbuf[_c][c][s + dks, t + dks];
+                                v += sbuf[_c][i, j] * kbuf[_c][c][s + ks, t + ks];
                             }
                         }
                     }
