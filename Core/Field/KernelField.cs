@@ -36,7 +36,6 @@ namespace Core.Field
             Channels = channels;
             Depth = depth;
             Size = size;
-            Optimizer = opt;
             Bias = new double[depth];
             Buffer = new double[channels][][,];
             dBias = new double[depth];
@@ -51,6 +50,18 @@ namespace Core.Field
                     dBuffer[c][d] = new double[2 * size + 1, 2 * size + 1];
                 }
             }
+
+            if (opt != null)
+            {
+                Optimizer = opt;
+                Optimizer.Initialize(this);
+            }
+        }
+
+        public KernelField Congruence()
+        {
+            var k = new KernelField(Channels, Depth, Size, null);
+            return k;
         }
 
         public void Randmize()
@@ -123,7 +134,7 @@ namespace Core.Field
 
             if (batch >= 1)
             {
-                Optimizer.UpdateProcess(this, batch);
+                Optimizer.UpdateProcess(batch);
             }
         }
 

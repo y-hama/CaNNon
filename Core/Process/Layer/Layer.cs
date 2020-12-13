@@ -25,9 +25,16 @@ namespace Core.Process.Layer
             return layer;
         }
 
-        public void ShowOutput()
+        public static void Connect(Layer prev, Layer next)
         {
-            property.Output.Show("output");
+            // TODO:サイズチェック
+            next.property.Input = prev.property.Output;
+            prev.property.Sigma = next.property.Propagater;
+        }
+
+        public void ShowOutput(string title)
+        {
+            property.Output.Show("output" + title);
         }
 
     }

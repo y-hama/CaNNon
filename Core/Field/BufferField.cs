@@ -16,8 +16,6 @@ namespace Core.Field
     class BufferField
     {
         public double[][,] Buffer { get; private set; }
-        private double[][] Vector { get; set; }
-        private Mat Frame { get; set; } = new Mat();
 
         public int Channels { get; private set; }
         public int Width { get; private set; }
@@ -83,7 +81,7 @@ namespace Core.Field
                     diff[n] = DeviceFunction.Abs(sb[c][x, y] - tb[c][x, y]);
                 });
             }
-            return diff.Sum() / Length;
+            return diff.Sum() / Area;
         }
 
         private Gpu GPU { get; set; }
@@ -106,35 +104,37 @@ namespace Core.Field
             Channels = c;
 
             Buffer = new double[c][,];
-            Vector = new double[c][];
             for (int i = 0; i < c; i++)
             {
                 Buffer[i] = new double[w, h];
-                Vector[i] = new double[Area];
             }
+        }
+
+        public BufferField Congruence()
+        {
+            var f = new BufferField(GPU, Width, Height, Channels);
+            return f;
         }
 
         public void ReadFrom(Mat frame)
         {
-            Frame = frame;
-            Read();
+            ReadFromCVMat(frame);
         }
 
         public void ReadFrom(VideoCapture cap)
         {
-            Frame = new Mat();
-            cap.Read(Frame);
-            Frame = Frame.Flip(FlipMode.Y);
-            Read();
+            var frame = new Mat();
+            cap.Read(frame);
+            frame = frame.Flip(FlipMode.Y);
+            ReadFromCVMat(frame);
         }
 
         public void ReadFrom(string filename)
         {
-            Frame = new Mat(filename);
-            Read();
+            ReadFromCVMat(new Mat(filename));
         }
 
-        private void Read()
+        private void ReadFromCVMat(Mat Frame)
         {
             var cnl = Frame.Channels();
             if (cnl != Channels)
@@ -160,28 +160,41 @@ namespace Core.Field
             }
 
             Mat[] frames = Frame.Split();
+            double[][] vector;
+            vector = new double[Channels][];
             for (int c = 0; c < Channels; c++)
             {
-                Marshal.Copy(frames[c].Data, Vector[c], 0, Area);
+                vector[c] = new double[Area];
+                Marshal.Copy(frames[c].Data, vector[c], 0, Area);
             }
 
-            FrameToBuffer();
+            FrameToBuffer(vector);
         }
 
         public void Show(string title = "title")
         {
-            BufferToFrame();
+            double[][] vector;
+            vector = new double[Channels][];
+            for (int c = 0; c < Channels; c++)
+            {
+                vector[c] = new double[Area];
+            }
+            BufferToFrame(ref vector);
 
             Mat[] frames = new Mat[Channels];
             for (int c = 0; c < Channels; c++)
             {
                 frames[c] = new Mat(new Size(Width, Height), MatType.CV_64FC1);
-                Marshal.Copy(Vector[c], 0, frames[c].Data, Area);
+                Marshal.Copy(vector[c], 0, frames[c].Data, Area);
                 frames[c].ConvertTo(frames[c], MatType.CV_8UC1, byte.MaxValue);
             }
             var frame = new Mat();
             Cv2.Merge(frames, frame);
             Cv2.ImShow(title, frame);
+        }
+
+        public static void ShowAllField()
+        {
             Cv2.WaitKey(1);
         }
 
@@ -219,13 +232,46 @@ namespace Core.Field
         }
 
         [GpuManaged()]
-        private void FrameToBuffer()
+        public void CopyTo(BufferField frame)
+        {
+            int area = Area;
+            int width = Width;
+            int height = Height;
+            var sbuffer = Buffer;
+            var dbuffer = frame.Buffer;
+
+            if (GPU != null)
+            {
+                GPU.For(0, Length, n =>
+                {
+                    int c = (int)(n / area);
+                    int i = n - c * area;
+                    int y = (int)(i / width);
+                    int x = i - y * width;
+                    dbuffer[c][x, y] = sbuffer[c][x, y];
+                });
+            }
+            else
+            {
+                for (int n = 0; n < Length; n++)
+                {
+                    int c = (int)(n / area);
+                    int i = n - c * area;
+                    int y = (int)(i / width);
+                    int x = i - y * width;
+                    dbuffer[c][x, y] = sbuffer[c][x, y];
+                }
+            }
+        }
+
+        [GpuManaged()]
+        private void FrameToBuffer(double[][] _vector)
         {
             int area = Area;
             int width = Width;
             int height = Height;
             var buffer = Buffer;
-            var vector = Vector;
+            var vector = _vector;
             if (GPU != null)
             {
                 GPU.For(0, Length, n =>
@@ -251,13 +297,13 @@ namespace Core.Field
         }
 
         [GpuManaged()]
-        private void BufferToFrame()
+        private void BufferToFrame(ref double[][] _vector)
         {
             int area = Area;
             int width = Width;
             int height = Height;
             var buffer = Buffer;
-            var vector = Vector;
+            var vector = _vector;
             if (GPU != null)
             {
                 GPU.For(0, Channels * Area, n =>

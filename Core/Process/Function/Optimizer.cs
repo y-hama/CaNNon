@@ -10,7 +10,35 @@ namespace Core.Process.Function
 {
     abstract class Optimizer
     {
+        protected KernelField Kernel { get; private set; }
+        public void Initialize(KernelField kernel)
+        {
+            Kernel = kernel;
+            InitializeInnerField();
+        }
 
-        public abstract void UpdateProcess(KernelField kernel, int batch);
+        protected abstract void InitializeInnerField();
+
+
+        public void UpdateProcess(int batch)
+        {
+            for (int d = 0; d < Kernel.Depth; d++)
+            {
+                UpdateBias(Kernel.dBias[d] / batch, ref Kernel.Bias[d], d);
+                for (int c = 0; c < Kernel.Channels; c++)
+                {
+                    for (int s = 0; s < Kernel.Size * 2 + 1; s++)
+                    {
+                        for (int t = 0; t < Kernel.Size * 2 + 1; t++)
+                        {
+                            UpdateKernel(Kernel.dBuffer[c][d][s, t] / batch, ref Kernel.Buffer[c][d][s, t], c, d, s, t);
+                        }
+                    }
+                }
+            }
+        }
+
+        public abstract void UpdateBias(double x, ref double y, int c);
+        public abstract void UpdateKernel(double x, ref double y, int c, int d, int s, int t);
     }
 }

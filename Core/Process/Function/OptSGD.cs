@@ -16,22 +16,23 @@ namespace Core.Process.Function
             Rho = rho;
         }
 
-        public override void UpdateProcess(KernelField kernel, int batch)
+        protected override void InitializeInnerField()
         {
-            for (int d = 0; d < kernel.Depth; d++)
-            {
-                for (int c = 0; c < kernel.Channels; c++)
-                {
-                    kernel.Bias[d] -= Rho * kernel.dBias[d] / batch;
-                    for (int s = 0; s < kernel.Size * 2 + 1; s++)
-                    {
-                        for (int t = 0; t < kernel.Size * 2 + 1; t++)
-                        {
-                            kernel.Buffer[c][d][s, t] -= Rho * kernel.dBuffer[c][d][s, t] / batch;
-                        }
-                    }
-                }
-            }
+        }
+
+        public override void UpdateBias(double x, ref double y, int c)
+        {
+            UpdateElement(x, ref y);
+        }
+
+        public override void UpdateKernel(double x, ref double y, int c, int d, int s, int t)
+        {
+            UpdateElement(x, ref y);
+        }
+
+        private void UpdateElement(double x, ref double y)
+        {
+            y = y - Rho * x;
         }
     }
 }

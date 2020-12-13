@@ -91,8 +91,10 @@
     <Compile Include="Field\BufferField.cs" />
     <Compile Include="Field\KernelField.cs" />
     <Compile Include="Loader.cs" />
+    <Compile Include="Model\Model.cs" />
     <Compile Include="Process\Function\ConvBack.cs" />
     <Compile Include="Process\Function\ConvForward.cs" />
+    <Compile Include="Process\Function\OptAdam.cs" />
     <Compile Include="Process\Function\Optimizer.cs" />
     <Compile Include="Process\Function\OptSGD.cs" />
     <Compile Include="Process\Layer\ConvLayer.cs" />
