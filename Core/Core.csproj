@@ -87,6 +87,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common\ModelEdgeParameter.cs" />
     <Compile Include="Common\Stopwatch.cs" />
     <Compile Include="Field\BufferField.cs" />
     <Compile Include="Field\KernelField.cs" />
@@ -102,6 +103,8 @@
     <Compile Include="Process\Property\ConvProperty.cs" />
     <Compile Include="Process\Property\Property.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Reader\ImageFile.cs" />
+    <Compile Include="Reader\Reader.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

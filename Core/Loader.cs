@@ -19,10 +19,49 @@ namespace Core
     {
         public static void Start()
         {
-            bool usecam = false;
-            string folderpath = @"\clothes";
+            var size = new Size(200, 200);
+            var inChannels = 3;
+            var outChannels = 3;
+            var kernelsize = 1;
+            var stride = 1;
 
-            int batchMax = 3;
+            int layercount = 3;
+            int batchMax = 4;
+
+            string folderpath = $@"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}\clothes";
+
+            using (var gpu = Gpu.Default)
+            {
+                var model = new Model.Model();
+                for (int i = 0; i < layercount; i++)
+                {
+                    model.AddLayer(Process.Layer.Layer.Load(
+                            new Process.Property.ConvProperty(
+                                gpu,
+                                size.Width, size.Height,
+                                inChannels, outChannels,
+                                stride, kernelsize,
+                                new OptAdam())));
+                }
+                model.Confirm(gpu, new Reader.ImageFile(folderpath));
+
+                while (true)
+                {
+                    model.Learn(batchMax);
+                    Console.WriteLine($"b:{model.Batch}, e:{model.Epoch}, g:{model.Generation}, {model.Difference}");
+                    model.Output.Show("out");
+                    BufferField.ShowAllField();
+                }
+            }
+        }
+
+        private static void Sample()
+        {
+            bool usecam = false;
+            string folderpath = $@"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}\clothes";
+
+            int layercount = 3;
+            int batchMax = 1;
 
             var size = new Size(256, 160);
             var inChannels = 3;
@@ -40,7 +79,6 @@ namespace Core
             using (var gpu = Gpu.Default)
             using (var cap = new VideoCapture(1))
             {
-                int layercount = 6;
                 var list = new List<Process.Layer.Layer>();
                 for (int i = 0; i < layercount; i++)
                 {
@@ -58,7 +96,7 @@ namespace Core
                 }
 
                 int gen = 0, count = 0, epoch = 0;
-                System.IO.FileInfo[] files = new System.IO.DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + folderpath).GetFiles();
+                System.IO.FileInfo[] files = new System.IO.DirectoryInfo(folderpath).GetFiles();
                 int index = 0;
                 while (true)
                 {
@@ -78,7 +116,7 @@ namespace Core
                     {
                         index = 0;
                         gen++;
-                        files = new System.IO.DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + folderpath).GetFiles();
+                        files = new System.IO.DirectoryInfo(folderpath).GetFiles();
                     }
                     if (count >= batchMax)
                     {

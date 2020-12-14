@@ -10,7 +10,15 @@ namespace Core.Model
 {
     class Model
     {
+        public int Batch { get; private set; } = 0;
+        public int Generation { get; private set; } = 0;
+        public int Epoch { get; private set; } = 0;
+
+        public double Difference { get; private set; }
+
         private List<Process.Layer.Layer> Layers { get; set; } = new List<Process.Layer.Layer>();
+
+        public BufferField Output { get { return Layers[Layers.Count - 1].property.Output; } }
 
         public BufferField InputField
         {
@@ -27,13 +35,25 @@ namespace Core.Model
             }
         }
 
+        private Reader.Reader Reader { get; set; }
+
         public void AddLayer(Process.Layer.Layer layer)
         {
             Layers.Add(layer);
         }
 
-        public void Confirm()
+        public void Confirm(Alea.Gpu gpu, Reader.Reader reader)
         {
+            Reader = reader;
+            reader.ModelReflection(gpu, new Common.ModelEdgeParameter()
+            {
+                InputSize = new OpenCvSharp.Size(Layers[0].property.Input.Width, Layers[0].property.Input.Height),
+                InputChannels = Layers[0].property.Input.Channels,
+                OutputSize = new OpenCvSharp.Size(Layers[Layers.Count - 1].property.Output.Width, Layers[Layers.Count - 1].property.Output.Height),
+                OutputChannels = Layers[Layers.Count - 1].property.Output.Channels,
+            });
+            reader.Start();
+
             for (int i = 0; i < Layers.Count - 1; i++)
             {
                 Layers[i + 1].property.Input = Layers[i].property.Output;
@@ -47,8 +67,23 @@ namespace Core.Model
             LearnProcess(teacher);
         }
 
+        public void Learn(int batchcount)
+        {
+            for (int b = 0; b < batchcount; b++)
+            {
+                var buf = Reader.GetBuffer();
+                InferenceProcess(buf.Input);
+                LearnProcess(buf.Teacher);
+                Generation++;
+                Epoch = buf.Epoch;
+            }
+            Batch++;
+            Update();
+        }
+
         public void Update()
         {
+            Difference = Layers[Layers.Count - 1].Difference;
             foreach (var item in Layers)
             {
                 item.Update();
