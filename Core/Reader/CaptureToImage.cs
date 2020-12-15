@@ -4,50 +4,51 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using OpenCvSharp;
+
 namespace Core.Reader
 {
-    class ImageFile : Reader
+    class CaptureToImage : Reader
     {
+        private int DeviceID { get; set; }
         private string SourceLocation { get; set; }
 
         private System.IO.FileInfo[] files { get; set; }
+        VideoCapture cap;
 
-        private int index1 { get; set; } = 0;
-        private int index2 { get; set; } = 0;
-        private int IndexOffset { get; set; }
+        private int index { get; set; } = 0;
 
-        public ImageFile(string location, int indexoffset = 0)
+
+        public CaptureToImage(int deviceID, string location)
         {
+            DeviceID = deviceID;
             SourceLocation = location;
-            IndexOffset = indexoffset;
         }
 
         protected override void Initialize()
         {
             files = (new System.IO.DirectoryInfo(SourceLocation)).GetFiles();
-            index1 = 0;
-            index2 = IndexOffset;
+            index = 0;
+
+            cap = new VideoCapture(DeviceID);
         }
 
         protected override void Get(ref BufferItem buffer)
         {
+            var frame = new Mat();
+            cap.Read(frame);
+            frame = frame.Flip(FlipMode.Y);
             buffer.Epoch = epoch;
-            buffer.Input.ReadFrom(new OpenCvSharp.Mat(files[index1].FullName));
-            buffer.Teacher.ReadFrom(new OpenCvSharp.Mat(files[index2].FullName));
+            buffer.Input.ReadFrom(frame);
+            buffer.Teacher.ReadFrom(new OpenCvSharp.Mat(files[index].FullName));
 
-            index1++;
-            index2++;
-            if (index1 >= files.Length)
+            index++;
+            if (index >= files.Length)
             {
                 epoch++;
-                index1 = 0;
+                index = 0;
                 files = (new System.IO.DirectoryInfo(SourceLocation)).GetFiles();
             }
-            if (index2 >= files.Length)
-            {
-                index2 = 0;
-            }
-
         }
     }
 }

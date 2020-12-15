@@ -15,6 +15,7 @@ namespace Core.Process.Function
         const double b2 = 0.999;
         const double ep = 10e-8;
 
+        int t { get; set; } = 0;
         KernelField M { get; set; }
         KernelField V { get; set; }
 
@@ -24,12 +25,17 @@ namespace Core.Process.Function
             V = Kernel.Congruence();
         }
 
-        public override void UpdateBias(double x, ref double y, int c)
+        protected override void UpdateInitial()
+        {
+            
+        }
+
+        protected override void UpdateBias(double x, ref double y, int c)
         {
             UpdateElement(x, ref y, ref M.Bias[c], ref V.Bias[c]);
         }
 
-        public override void UpdateKernel(double x, ref double y, int c, int d, int s, int t)
+        protected override void UpdateKernel(double x, ref double y, int c, int d, int s, int t)
         {
             UpdateElement(x, ref y, ref M.Buffer[c][d][s, t], ref V.Buffer[c][d][s, t]);
         }

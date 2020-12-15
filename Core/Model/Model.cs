@@ -18,7 +18,9 @@ namespace Core.Model
 
         private List<Process.Layer.Layer> Layers { get; set; } = new List<Process.Layer.Layer>();
 
+        public BufferField Input { get { return Layers[0].property.Input; } }
         public BufferField Output { get { return Layers[Layers.Count - 1].property.Output; } }
+        public BufferField Sigma { get { return Layers[Layers.Count - 1].property.Sigma; } }
 
         public BufferField InputField
         {

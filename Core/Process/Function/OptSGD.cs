@@ -20,12 +20,16 @@ namespace Core.Process.Function
         {
         }
 
-        public override void UpdateBias(double x, ref double y, int c)
+        protected override void UpdateInitial()
+        {
+        }
+
+        protected override void UpdateBias(double x, ref double y, int c)
         {
             UpdateElement(x, ref y);
         }
 
-        public override void UpdateKernel(double x, ref double y, int c, int d, int s, int t)
+        protected override void UpdateKernel(double x, ref double y, int c, int d, int s, int t)
         {
             UpdateElement(x, ref y);
         }

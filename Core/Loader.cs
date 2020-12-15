@@ -22,11 +22,11 @@ namespace Core
             var size = new Size(200, 200);
             var inChannels = 3;
             var outChannels = 3;
-            var kernelsize = 1;
-            var stride = 1;
+            var kernelsize = 3;
+            var stride = 2;
 
             int layercount = 3;
-            int batchMax = 4;
+            int batchMax = 3;
 
             string folderpath = $@"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}\clothes";
 
@@ -43,13 +43,15 @@ namespace Core
                                 stride, kernelsize,
                                 new OptAdam())));
                 }
-                model.Confirm(gpu, new Reader.ImageFile(folderpath));
+                model.Confirm(gpu, new Reader.ImageFile(folderpath, 2));
 
                 while (true)
                 {
                     model.Learn(batchMax);
                     Console.WriteLine($"b:{model.Batch}, e:{model.Epoch}, g:{model.Generation}, {model.Difference}");
+                    model.Input.Show("in");
                     model.Output.Show("out");
+                    model.Sigma.Show("sigma");
                     BufferField.ShowAllField();
                 }
             }

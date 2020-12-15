@@ -22,6 +22,7 @@ namespace Core.Process.Function
 
         public void UpdateProcess(int batch)
         {
+            UpdateInitial();
             for (int d = 0; d < Kernel.Depth; d++)
             {
                 UpdateBias(Kernel.dBias[d] / batch, ref Kernel.Bias[d], d);
@@ -38,7 +39,8 @@ namespace Core.Process.Function
             }
         }
 
-        public abstract void UpdateBias(double x, ref double y, int c);
-        public abstract void UpdateKernel(double x, ref double y, int c, int d, int s, int t);
+        protected abstract void UpdateInitial();
+        protected abstract void UpdateBias(double x, ref double y, int c);
+        protected abstract void UpdateKernel(double x, ref double y, int c, int d, int s, int t);
     }
 }

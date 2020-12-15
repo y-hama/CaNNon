@@ -13,6 +13,8 @@ namespace Core.Reader
 
         private int BufferingSize { get; set; } = 4;
 
+        protected int epoch { get; set; } = 0;
+
         public class BufferItem
         {
             public int Epoch { get; set; }
