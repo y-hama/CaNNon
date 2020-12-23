@@ -32,8 +32,12 @@ namespace Core.Reader
         protected override void Get(ref BufferItem buffer)
         {
             buffer.Epoch = epoch;
-            buffer.Input.ReadFrom(new OpenCvSharp.Mat(files[index1].FullName));
-            buffer.Teacher.ReadFrom(new OpenCvSharp.Mat(files[index2].FullName));
+            var frame1 = new OpenCvSharp.Mat(files[index1].FullName);
+            buffer.Input.ReadFrom(frame1);
+
+            var frame2 = new OpenCvSharp.Mat(files[index2].FullName);
+            //OpenCvSharp.Cv2.Laplacian(frame2, frame2, frame2.Type(), 1);
+            buffer.Teacher.ReadFrom(frame2);
 
             index1++;
             index2++;

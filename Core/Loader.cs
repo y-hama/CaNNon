@@ -22,28 +22,27 @@ namespace Core
             var size = new Size(200, 200);
             var inChannels = 3;
             var outChannels = 3;
-            var kernelsize = 3;
-            var stride = 2;
+            var kernelsize = 1;
+            var dilation = 1;
 
-            int layercount = 3;
-            int batchMax = 3;
+            int layercount = 2;
+            int batchMax = 2;
 
             string folderpath = $@"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}\clothes";
 
             using (var gpu = Gpu.Default)
             {
-                var model = new Model.Model();
+                var model = new Model.Model(gpu, new Reader.ImageFile(folderpath, 0));
                 for (int i = 0; i < layercount; i++)
                 {
                     model.AddLayer(Process.Layer.Layer.Load(
                             new Process.Property.ConvProperty(
                                 gpu,
-                                size.Width, size.Height,
                                 inChannels, outChannels,
-                                stride, kernelsize,
+                                dilation, kernelsize,
                                 new OptAdam())));
                 }
-                model.Confirm(gpu, new Reader.ImageFile(folderpath, 2));
+                model.Confirm(size);
 
                 while (true)
                 {
@@ -52,106 +51,8 @@ namespace Core
                     model.Input.Show("in");
                     model.Output.Show("out");
                     model.Sigma.Show("sigma");
+                    model.HiddenOutput(0).Show("hout-0");
                     BufferField.ShowAllField();
-                }
-            }
-        }
-
-        private static void Sample()
-        {
-            bool usecam = false;
-            string folderpath = $@"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}\clothes";
-
-            int layercount = 3;
-            int batchMax = 1;
-
-            var size = new Size(256, 160);
-            var inChannels = 3;
-            var outChannels = 3;
-            var kernelsize = 1;
-            var stride = 1;
-
-            Mat frame = new Mat();
-
-            var totaltime = new Stopwatch();
-            var gputime = new Stopwatch();
-            double totalelapsed = 0;
-            double gpuelapsed = 0;
-
-            using (var gpu = Gpu.Default)
-            using (var cap = new VideoCapture(1))
-            {
-                var list = new List<Process.Layer.Layer>();
-                for (int i = 0; i < layercount; i++)
-                {
-                    list.Add(Process.Layer.Layer.Load(
-                            new Process.Property.ConvProperty(
-                                gpu,
-                                size.Width, size.Height,
-                                inChannels, outChannels,
-                                stride, kernelsize,
-                                new OptAdam())));
-                }
-                for (int i = 0; i < layercount - 1; i++)
-                {
-                    Process.Layer.Layer.Connect(list[i], list[i + 1]);
-                }
-
-                int gen = 0, count = 0, epoch = 0;
-                System.IO.FileInfo[] files = new System.IO.DirectoryInfo(folderpath).GetFiles();
-                int index = 0;
-                while (true)
-                {
-                    totaltime.Start();
-                    if (usecam)
-                    {
-                        cap.Read(frame);
-                        frame = frame.Flip(FlipMode.Y);
-                    }
-                    else
-                    {
-                        frame = new Mat(files[index].FullName);
-                    }
-
-                    index++;
-                    if (index >= files.Length)
-                    {
-                        index = 0;
-                        gen++;
-                        files = new System.IO.DirectoryInfo(folderpath).GetFiles();
-                    }
-                    if (count >= batchMax)
-                    {
-                        Console.WriteLine($"g:{gen}, e:{epoch++}, {list[list.Count - 1].Difference}");
-                        for (int i = 0; i < layercount; i++)
-                        {
-                            list[i].Update();
-                            list[i].ShowOutput($"{i}");
-                        }
-                        BufferField.ShowAllField();
-
-                        count = 0;
-                        GC.Collect();
-                    }
-                    count++;
-
-                    list[0].property.Input.ReadFrom(frame);
-
-                    gputime.Start();
-                    for (int i = 0; i < layercount; i++)
-                    {
-                        list[i].Forward();
-                    }
-                    list[list.Count - 1].property.Output.DifferenceOf(list[0].property.Input, ref list[list.Count - 1].property.Sigma);
-                    for (int i = layercount - 1; i >= 0; i--)
-                    {
-                        list[i].Back();
-                    }
-                    gpuelapsed = gputime.Elapsed();
-
-                    totalelapsed = totaltime.Elapsed();
-                    //Console.WriteLine($"g:{gen++}, {totalelapsed}, {gpuelapsed}");
-
                 }
             }
         }

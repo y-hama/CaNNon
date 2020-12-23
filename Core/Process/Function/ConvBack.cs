@@ -18,7 +18,7 @@ namespace Core.Process.Function
     class ConvBack
     {
         [GpuManaged()]
-        public void Process(Gpu gpu, BufferField input, BufferField sigma, int stride, ref BufferField propagater, ref KernelField kernel)
+        public void Process(Gpu gpu, BufferField input, BufferField sigma, int dilation, ref BufferField propagater, ref KernelField kernel)
         {
             var iw = input.Width;
             var ih = input.Height;
@@ -74,8 +74,8 @@ namespace Core.Process.Function
                         {
                             for (int y = 0; y < sh; y++)
                             {
-                                int _x = x + _s * stride;
-                                int _y = y + _t * stride;
+                                int _x = x + _s * dilation;
+                                int _y = y + _t * dilation;
                                 if (_x >= 0 && _x < iw && _y >= 0 && _y < ih)
                                 {
                                     cnk++;
@@ -104,8 +104,8 @@ namespace Core.Process.Function
                     {
                         for (int t = ks; t >= -ks; t--)
                         {
-                            int i = x + s * stride;
-                            int j = y + t * stride;
+                            int i = x + s * dilation;
+                            int j = y + t * dilation;
                             if (i >= 0 && i < sw && j > 0 && j < sh)
                             {
                                 v += sbuf[_c][i, j] * kbuf[_c][c][s + ks, t + ks];
