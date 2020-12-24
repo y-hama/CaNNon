@@ -14,22 +14,34 @@ namespace Core.Process.Property
     {
         public override Type Connection => typeof(Layer.ConvLayer);
 
+        Optimizer optimizer = null;
+
+        public int KernelSize = 0;
+
         public int Dilation = 1;
+        public int Expand = 0;
 
         public KernelField Kernel;
 
-        public ConvProperty(Gpu gpu, int inChannels, int outChannels, int dilation, int kernelSize, Optimizer opt)
-            : base(gpu, inChannels, outChannels)
+        public ConvProperty(Gpu gpu, int outChannels, int dilation, int expand, int kernelSize, Optimizer opt)
+            : base(gpu, outChannels)
         {
+            KernelSize = kernelSize;
             Dilation = dilation;
-            Kernel = new KernelField(inChannels, outChannels, kernelSize, opt);
-            Kernel.Randmize();
+            Expand = expand;
+            optimizer = opt;
         }
 
         protected override void Adjustment(int inputWidth, int inputHeight, out int outputWidth, out int ouputHeight)
         {
-            outputWidth = inputWidth;
-            ouputHeight = inputHeight;
+            outputWidth = inputWidth + (inputWidth - 1) * (Expand - 1);
+            ouputHeight = inputHeight + (inputHeight - 1) * (Expand - 1);
+        }
+
+        protected override void ConfirmField()
+        {
+            Kernel = new KernelField(inCh, outCh, KernelSize, optimizer);
+            Kernel.Randmize();
         }
     }
 }

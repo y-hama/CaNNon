@@ -11,9 +11,16 @@ namespace Core.Reader
         private object __queuelock = new object();
         private Queue<BufferItem> ItemQueue { get; set; } = new Queue<BufferItem>();
 
+        public int ReadChannels { get; private set; }
+
         private int BufferingSize { get; set; } = 4;
 
         protected int epoch { get; set; } = 0;
+
+        protected Reader(int readChannels)
+        {
+            ReadChannels = readChannels;
+        }
 
         public class BufferItem
         {

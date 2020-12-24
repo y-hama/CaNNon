@@ -18,7 +18,7 @@ namespace Core.Process.Function
     class ConvBack
     {
         [GpuManaged()]
-        public void Process(Gpu gpu, BufferField input, BufferField sigma, int dilation, ref BufferField propagater, ref KernelField kernel)
+        public void Process(Gpu gpu, BufferField input, BufferField sigma, int dilation, int expand, ref BufferField propagater, ref KernelField kernel)
         {
             var iw = input.Width;
             var ih = input.Height;
@@ -63,6 +63,7 @@ namespace Core.Process.Function
                 int t = n - s * (2 * ks + 1);
                 int _s = s - ks;
                 int _t = t - ks;
+
                 for (int c = 0; c < ic; c++)
                 {
                     for (int d = 0; d < sc; d++)
@@ -76,10 +77,15 @@ namespace Core.Process.Function
                             {
                                 int _x = x + _s * dilation;
                                 int _y = y + _t * dilation;
-                                if (_x >= 0 && _x < iw && _y >= 0 && _y < ih)
+                                if (_x % expand == 0 && _y % expand == 0)
                                 {
-                                    cnk++;
-                                    ddk += ibuf[c][_x, _y] * sbuf[d][x, y];
+                                    int __x = _x / expand;
+                                    int __y = _y / expand;
+                                    if (__x >= 0 && __x < iw && __y >= 0 && __y < ih)
+                                    {
+                                        cnk++;
+                                        ddk += ibuf[c][__x, __y] * sbuf[d][x, y];
+                                    }
                                 }
                             }
                         }
@@ -90,7 +96,8 @@ namespace Core.Process.Function
             #endregion
 
             #region Calculate Propagater
-            gpu.For(0, propagater.Length, n =>
+            //gpu.For(0, propagater.Length, n =>
+            for (int n = 0; n < propagater.Length; n++)
             {
                 int c = (int)(n / (pw * ph));
                 int l = n - c * (pw * ph);
@@ -106,15 +113,21 @@ namespace Core.Process.Function
                         {
                             int i = x + s * dilation;
                             int j = y + t * dilation;
-                            if (i >= 0 && i < sw && j > 0 && j < sh)
+                            if (i % expand == 0 && j % expand == 0)
                             {
-                                v += sbuf[_c][i, j] * kbuf[_c][c][s + ks, t + ks];
+                                int _i = i / expand;
+                                int _j = j / expand;
+                                if (_i >= 0 && _i < sw && _j > 0 && _j < sh)
+                                {
+                                    v += sbuf[_c][_i, _j] * kbuf[c][_c][s + ks, t + ks];
+                                }
                             }
                         }
                     }
                 }
                 pbuf[c][x, y] = v;
-            });
+            }
+            //);
             #endregion
         }
     }

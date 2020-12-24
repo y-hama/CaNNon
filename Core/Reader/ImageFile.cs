@@ -16,7 +16,8 @@ namespace Core.Reader
         private int index2 { get; set; } = 0;
         private int IndexOffset { get; set; }
 
-        public ImageFile(string location, int indexoffset = 0)
+        public ImageFile(int readChannels, string location, int indexoffset = 0)
+            : base(readChannels)
         {
             SourceLocation = location;
             IndexOffset = indexoffset;

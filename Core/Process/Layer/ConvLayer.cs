@@ -17,7 +17,7 @@ namespace Core.Process.Layer
         {
             forward.Process(Property.GPU,
                 Property.Input, Property.Kernel,
-                Property.Dilation,
+                Property.Dilation, Property.Expand,
                 ref Property.Output
                 );
         }
@@ -26,7 +26,7 @@ namespace Core.Process.Layer
         {
             back.Process(Property.GPU,
                 Property.Input, Property.Sigma,
-                Property.Dilation,
+                Property.Dilation, Property.Expand,
                 ref property.Propagater, ref Property.Kernel);
             DifferenceSum += Property.Sigma.AbsSum / Property.Sigma.Length;
             BatchCount++;

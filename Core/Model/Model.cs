@@ -23,6 +23,7 @@ namespace Core.Model
         public BufferField Input { get { return Layers[0].property.Input; } }
         public BufferField Output { get { return Layers[Layers.Count - 1].property.Output; } }
         public BufferField Sigma { get { return Layers[Layers.Count - 1].property.Sigma; } }
+        public BufferField Teacher { get; private set; }
 
         public BufferField HiddenOutput(int index) { return Layers[index].property.Output; }
 
@@ -56,10 +57,13 @@ namespace Core.Model
 
         public void Confirm(OpenCvSharp.Size sourceSize)
         {
-            Layers[0].property.SetInputSize(sourceSize.Width, sourceSize.Height);
+            Layers[0].property.SetInputSize(sourceSize.Width, sourceSize.Height, Reader.ReadChannels);
             for (int i = 1; i < Layers.Count; i++)
             {
-                Layers[i].property.SetInputSize(Layers[i - 1].property.Output.Width, Layers[i - 1].property.Output.Height);
+                Layers[i].property.SetInputSize(
+                    Layers[i - 1].property.Output.Width,
+                    Layers[i - 1].property.Output.Height,
+                    Layers[i - 1].property.Output.Channels);
             }
 
             for (int i = 0; i < Layers.Count - 1; i++)
@@ -93,6 +97,7 @@ namespace Core.Model
                 LearnProcess(buf.Teacher);
                 Generation++;
                 Epoch = buf.Epoch;
+                Teacher = buf.Teacher;
             }
             Batch++;
             Update();

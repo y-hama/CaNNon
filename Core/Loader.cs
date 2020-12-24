@@ -19,29 +19,31 @@ namespace Core
     {
         public static void Start()
         {
-            var size = new Size(200, 200);
-            var inChannels = 3;
-            var outChannels = 3;
-            var kernelsize = 1;
-            var dilation = 1;
-
-            int layercount = 2;
+            var size = new Size(64, 64);
             int batchMax = 2;
 
-            string folderpath = $@"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}\clothes";
+            string folderpath = $@"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}\img";
 
             using (var gpu = Gpu.Default)
             {
-                var model = new Model.Model(gpu, new Reader.ImageFile(folderpath, 0));
-                for (int i = 0; i < layercount; i++)
-                {
-                    model.AddLayer(Process.Layer.Layer.Load(
-                            new Process.Property.ConvProperty(
-                                gpu,
-                                inChannels, outChannels,
-                                dilation, kernelsize,
-                                new OptAdam())));
-                }
+                var model = new Model.Model(gpu, new Reader.ImageFile(3, folderpath, 0));
+
+                model.AddLayer(Process.Layer.Layer.Load(
+                        new Process.Property.ConvProperty(
+                            gpu, outChannels: 3,
+                            dilation: 1, expand: 3, kernelSize: 1,
+                            new OptAdam())));
+                model.AddLayer(Process.Layer.Layer.Load(
+                        new Process.Property.ConvProperty(
+                            gpu, outChannels: 4,
+                            dilation: 1, expand: 1, kernelSize: 1,
+                            new OptAdam())));
+                model.AddLayer(Process.Layer.Layer.Load(
+                        new Process.Property.ConvProperty(
+                            gpu, outChannels: 3,
+                            dilation: 1, expand: 1, kernelSize: 1,
+                            new OptAdam())));
+
                 model.Confirm(size);
 
                 while (true)
@@ -49,9 +51,10 @@ namespace Core
                     model.Learn(batchMax);
                     Console.WriteLine($"b:{model.Batch}, e:{model.Epoch}, g:{model.Generation}, {model.Difference}");
                     model.Input.Show("in");
+                    //model.Sigma.Show("sigma");
+                    //model.HiddenOutput(0).Show("hout-0");
+                    model.Teacher.Show("teacher");
                     model.Output.Show("out");
-                    model.Sigma.Show("sigma");
-                    model.HiddenOutput(0).Show("hout-0");
                     BufferField.ShowAllField();
                 }
             }

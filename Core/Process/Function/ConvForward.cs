@@ -18,7 +18,7 @@ namespace Core.Process.Function
     class ConvForward
     {
         [GpuManaged()]
-        public void Process(Gpu gpu, BufferField input, KernelField kernel, int dilation, ref BufferField output)
+        public void Process(Gpu gpu, BufferField input, KernelField kernel, int dilation, int expand, ref BufferField output)
         {
             var iw = input.Width;
             var ih = input.Height;
@@ -50,9 +50,14 @@ namespace Core.Process.Function
                         {
                             int i = x + s * dilation;
                             int j = y + t * dilation;
-                            if (i >= 0 && i < iw && j > 0 && j < ih)
+                            if (i % expand == 0 && j % expand == 0)
                             {
-                                v += ibuf[_c][i, j] * kbuf[_c][c][s + ks, t + ks];
+                                int _i = i / expand;
+                                int _j = j / expand;
+                                if (_i >= 0 && _i < iw && _j > 0 && _j < ih)
+                                {
+                                    v += ibuf[_c][_i, _j] * kbuf[_c][c][s + ks, t + ks];
+                                }
                             }
                         }
                     }

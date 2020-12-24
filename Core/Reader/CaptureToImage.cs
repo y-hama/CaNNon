@@ -19,7 +19,7 @@ namespace Core.Reader
         private int index { get; set; } = 0;
 
 
-        public CaptureToImage(int deviceID, string location)
+        public CaptureToImage(int readChannels, int deviceID, string location) : base(readChannels)
         {
             DeviceID = deviceID;
             SourceLocation = location;
