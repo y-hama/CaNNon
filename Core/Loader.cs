@@ -19,8 +19,8 @@ namespace Core
     {
         public static void Start()
         {
-            var size = new Size(64, 64);
-            int batchMax = 2;
+            var size = new Size(100, 100);
+            int batchMax = 1;
 
             string folderpath = $@"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}\img";
 
@@ -31,31 +31,36 @@ namespace Core
                 model.AddLayer(Process.Layer.Layer.Load(
                         new Process.Property.ConvProperty(
                             gpu, outChannels: 3,
-                            dilation: 1, expand: 3, kernelSize: 1,
-                            new OptAdam())));
-                model.AddLayer(Process.Layer.Layer.Load(
-                        new Process.Property.ConvProperty(
-                            gpu, outChannels: 4,
-                            dilation: 1, expand: 1, kernelSize: 1,
-                            new OptAdam())));
-                model.AddLayer(Process.Layer.Layer.Load(
-                        new Process.Property.ConvProperty(
-                            gpu, outChannels: 3,
-                            dilation: 1, expand: 1, kernelSize: 1,
-                            new OptAdam())));
+                            dilation: 1, expand: 3, kernelSize: 2,
+                            opt: new OptAdam(), act: new ActReLU())));
+                //model.AddLayer(Process.Layer.Layer.Load(
+                //        new Process.Property.ConvProperty(
+                //            gpu, outChannels: 4,
+                //            dilation: 1, expand: 2, kernelSize: 1,
+                //            opt: new OptAdam(), act: new ActReLU())));
+                //model.AddLayer(Process.Layer.Layer.Load(
+                //        new Process.Property.ConvProperty(
+                //            gpu, outChannels: 3,
+                //            dilation: 1, expand: 1, kernelSize: 1,
+                //            opt: new OptAdam(), act: new ActReLU())));
 
                 model.Confirm(size);
 
+                int viewcounter = 0;
                 while (true)
                 {
                     model.Learn(batchMax);
                     Console.WriteLine($"b:{model.Batch}, e:{model.Epoch}, g:{model.Generation}, {model.Difference}");
-                    model.Input.Show("in");
-                    //model.Sigma.Show("sigma");
-                    //model.HiddenOutput(0).Show("hout-0");
-                    model.Teacher.Show("teacher");
-                    model.Output.Show("out");
-                    BufferField.ShowAllField();
+                    viewcounter++;
+                    if (viewcounter % 4 == 0)
+                    {
+                        viewcounter = 0;
+                        model.Input.Show("in");
+                        model.Input.Show("insample", 2);
+                        model.Teacher.Show("teacher");
+                        model.Output.Show("out");
+                        BufferField.ShowAllField();
+                    }
                 }
             }
         }

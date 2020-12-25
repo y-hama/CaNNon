@@ -18,16 +18,19 @@ namespace Core.Process.Layer
             forward.Process(Property.GPU,
                 Property.Input, Property.Kernel,
                 Property.Dilation, Property.Expand,
-                ref Property.Output
+                ref Property.TemporaryOutput
                 );
+            Property.Activator?.Forward(Property.GPU, Property.TemporaryOutput, ref Property.Output);
         }
 
         public override void Back()
         {
+            Property.Activator?.Back(Property.GPU, Property.Sigma, Property.TemporaryOutput, ref Property.TemporarySigma);
             back.Process(Property.GPU,
-                Property.Input, Property.Sigma,
+                Property.Input, Property.TemporarySigma,
                 Property.Dilation, Property.Expand,
                 ref property.Propagater, ref Property.Kernel);
+
             DifferenceSum += Property.Sigma.AbsSum / Property.Sigma.Length;
             BatchCount++;
         }

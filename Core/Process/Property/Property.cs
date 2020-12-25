@@ -21,9 +21,12 @@ namespace Core.Process.Property
         public BufferField Propagater;
 
         protected int inCh { get; private set; }
-        protected int outCh { get; private set; }
         protected int inW { get; private set; }
         protected int inH { get; private set; }
+
+        protected int outCh { get; private set; }
+        protected int outW { get; private set; }
+        protected int outH { get; private set; }
 
         protected Property(Gpu gpu, int outChannels)
         {
@@ -39,9 +42,10 @@ namespace Core.Process.Property
         {
             inW = width; inH = height;
             inCh = inChannels;
-            int outW = 0, outH = 0;
+            int _outW = 0, _outH = 0;
 
-            Adjustment(width, height, out outW, out outH);
+            Adjustment(width, height, out _outW, out _outH);
+            outW = _outH; outH = _outH;
 
             var inS = new OpenCvSharp.Size(inW, inH);
             var outS = new OpenCvSharp.Size(outW, outH);

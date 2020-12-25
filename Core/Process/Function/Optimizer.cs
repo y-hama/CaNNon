@@ -10,6 +10,8 @@ namespace Core.Process.Function
 {
     abstract class Optimizer
     {
+        protected Optimizer() { }
+
         protected KernelField Kernel { get; private set; }
         public void Initialize(KernelField kernel)
         {
@@ -18,7 +20,6 @@ namespace Core.Process.Function
         }
 
         protected abstract void InitializeInnerField();
-
 
         public void UpdateProcess(int batch)
         {

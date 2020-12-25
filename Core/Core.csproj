@@ -93,6 +93,9 @@
     <Compile Include="Field\KernelField.cs" />
     <Compile Include="Loader.cs" />
     <Compile Include="Model\Model.cs" />
+    <Compile Include="Process\Function\Activator.cs" />
+    <Compile Include="Process\Function\ActLiner.cs" />
+    <Compile Include="Process\Function\ActReLU.cs" />
     <Compile Include="Process\Function\ConvBack.cs" />
     <Compile Include="Process\Function\ConvForward.cs" />
     <Compile Include="Process\Function\OptAdam.cs" />

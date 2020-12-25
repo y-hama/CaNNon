@@ -28,8 +28,10 @@ namespace Core.Field
         public Optimizer Optimizer { get; private set; }
 
         private static Random rsrc { get; set; } = new Random();
-        private static double RamdomMin { get; set; } = -1;
-        private static double RamdomMax { get; set; } = 1;
+        private static double RamdomBiasMin { get; set; } = 0;
+        private static double RamdomBiasMax { get; set; } = 0;
+        private static double RamdomBufferMin { get; set; } = -0.5;
+        private static double RamdomBufferMax { get; set; } = 1;
 
         public KernelField(int channels, int depth, int size, Optimizer opt)
         {
@@ -66,12 +68,14 @@ namespace Core.Field
 
         public void Randmize()
         {
+            double[] bias;
             double[][][,] buffer;
+            RandomBias(out bias);
             RandomBuffer(out buffer);
 
             for (int d = 0; d < Depth; d++)
             {
-                Bias[d] = 0;
+                Bias[d] = bias[d];
                 for (int c = 0; c < Channels; c++)
                 {
                     for (int s = 0; s < Size * 2 + 1; s++)
@@ -84,21 +88,21 @@ namespace Core.Field
                 }
             }
 
-            for (int d = 0; d < Depth; d++)
-            {
-                double sum = 0;
-                for (int c = 0; c < Channels; c++)
-                {
-                    for (int s = 0; s < Size * 2 + 1; s++)
-                    {
-                        for (int t = 0; t < Size * 2 + 1; t++)
-                        {
-                            sum += Buffer[c][d][s, t];
-                        }
-                    }
-                }
-                Bias[d] = -sum;// / (Channels * Depth);
-            }
+            //for (int d = 0; d < Depth; d++)
+            //{
+            //    double sum = 0;
+            //    for (int c = 0; c < Channels; c++)
+            //    {
+            //        for (int s = 0; s < Size * 2 + 1; s++)
+            //        {
+            //            for (int t = 0; t < Size * 2 + 1; t++)
+            //            {
+            //                sum += Buffer[c][d][s, t];
+            //            }
+            //        }
+            //    }
+            //    Bias[d] = -sum;// / (Channels * Depth);
+            //}
 
         }
 
@@ -148,7 +152,7 @@ namespace Core.Field
             b = new double[Depth];
             for (int d = 0; d < Depth; d++)
             {
-                b[d] = GetRandomSegment(RamdomMin, RamdomMax);
+                b[d] = GetRandomSegment(RamdomBiasMin, RamdomBiasMax);
             }
         }
 
@@ -165,7 +169,7 @@ namespace Core.Field
                     {
                         for (int t = 0; t < Size * 2 + 1; t++)
                         {
-                            b[c][d][s, t] = GetRandomSegment(RamdomMin, RamdomMax);
+                            b[c][d][s, t] = GetRandomSegment(RamdomBufferMin, RamdomBufferMax);
                         }
                     }
                 }

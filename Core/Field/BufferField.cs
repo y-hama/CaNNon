@@ -171,7 +171,7 @@ namespace Core.Field
             FrameToBuffer(vector);
         }
 
-        public void Show(string title = "title")
+        public void Show(string title, double scale = 1)
         {
             double[][] vector;
             vector = new double[Channels][];
@@ -190,6 +190,12 @@ namespace Core.Field
             }
             var frame = new Mat();
             Cv2.Merge(frames, frame);
+
+            if (scale != 1)
+            {
+                frame = frame.Resize(new Size(), scale, scale, InterpolationFlags.Linear);
+            }
+
             Cv2.ImShow(title, frame);
         }
 
