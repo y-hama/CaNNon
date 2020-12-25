@@ -23,6 +23,15 @@ namespace Core.Field
         public int Length { get { return Channels * Width * Height; } }
         public int Area { get { return Width * Height; } }
 
+        private static System.Threading.Thread thread = null;
+        private class ShowRequestArgument
+        {
+            public string Title { get; set; }
+            public Mat Frame { get; set; }
+        }
+        private static object __lock = new object();
+        private static Queue<ShowRequestArgument> requestArguments { get; set; } = new Queue<ShowRequestArgument>();
+
         public double Sum
         {
             get
@@ -98,6 +107,10 @@ namespace Core.Field
 
         private void Initialize(Gpu gpu, int w, int h, int c)
         {
+            if (thread == null)
+            {
+                (thread = new System.Threading.Thread(new System.Threading.ThreadStart(ShowThread))).Start();
+            }
             GPU = gpu;
             Width = w;
             Height = h;
@@ -196,12 +209,37 @@ namespace Core.Field
                 frame = frame.Resize(new Size(), scale, scale, InterpolationFlags.Linear);
             }
 
-            Cv2.ImShow(title, frame);
+            var arg = new ShowRequestArgument() { Title = title, Frame = frame };
+            lock (__lock)
+            {
+                requestArguments.Enqueue(arg);
+            }
         }
 
-        public static void ShowAllField()
+        private void ShowThread()
         {
-            Cv2.WaitKey(1);
+            while (true)
+            {
+                int count = int.MaxValue;
+                while (count > 0)
+                {
+                    ShowRequestArgument arg = null;
+                    lock (__lock)
+                    {
+                        if (requestArguments.Count > 0)
+                        {
+                            arg = requestArguments.Dequeue();
+                        }
+                        count = requestArguments.Count;
+                    }
+                    if (arg != null)
+                    {
+                        Cv2.ImShow(arg.Title, arg.Frame);
+                    }
+                }
+
+                Cv2.WaitKey(100);
+            }
         }
 
         public void DifferenceOf(BufferField inf, ref BufferField otf)

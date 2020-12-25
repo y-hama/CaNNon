@@ -19,8 +19,8 @@ namespace Core
     {
         public static void Start()
         {
-            var size = new Size(100, 100);
-            int batchMax = 1;
+            var size = new Size(50, 50);
+            int batchMax = 3;
 
             string folderpath = $@"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}\img";
 
@@ -30,19 +30,19 @@ namespace Core
 
                 model.AddLayer(Process.Layer.Layer.Load(
                         new Process.Property.ConvProperty(
-                            gpu, outChannels: 3,
-                            dilation: 1, expand: 3, kernelSize: 2,
+                            gpu, outChannels: 6,
+                            dilation: 1, expand: 2, kernelSize: 1,
                             opt: new OptAdam(), act: new ActReLU())));
-                //model.AddLayer(Process.Layer.Layer.Load(
-                //        new Process.Property.ConvProperty(
-                //            gpu, outChannels: 4,
-                //            dilation: 1, expand: 2, kernelSize: 1,
-                //            opt: new OptAdam(), act: new ActReLU())));
-                //model.AddLayer(Process.Layer.Layer.Load(
-                //        new Process.Property.ConvProperty(
-                //            gpu, outChannels: 3,
-                //            dilation: 1, expand: 1, kernelSize: 1,
-                //            opt: new OptAdam(), act: new ActReLU())));
+                model.AddLayer(Process.Layer.Layer.Load(
+                        new Process.Property.ConvProperty(
+                            gpu, outChannels: 4,
+                            dilation: 1, expand: 2, kernelSize: 2,
+                            opt: new OptAdam(), act: new ActReLU())));
+                model.AddLayer(Process.Layer.Layer.Load(
+                        new Process.Property.ConvProperty(
+                            gpu, outChannels: 3,
+                            dilation: 1, expand: 1, kernelSize: 1,
+                            opt: new OptAdam(), act: new ActReLU())));
 
                 model.Confirm(size);
 
@@ -56,10 +56,9 @@ namespace Core
                     {
                         viewcounter = 0;
                         model.Input.Show("in");
-                        model.Input.Show("insample", 2);
+                        model.Input.Show("insample", 4);
                         model.Teacher.Show("teacher");
                         model.Output.Show("out");
-                        BufferField.ShowAllField();
                     }
                 }
             }
