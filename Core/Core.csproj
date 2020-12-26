@@ -98,6 +98,7 @@
     <Compile Include="Process\Function\ActReLU.cs" />
     <Compile Include="Process\Function\ConvBack.cs" />
     <Compile Include="Process\Function\ConvForward.cs" />
+    <Compile Include="Process\Function\OptAdaBound.cs" />
     <Compile Include="Process\Function\OptAdam.cs" />
     <Compile Include="Process\Function\Optimizer.cs" />
     <Compile Include="Process\Function\OptSGD.cs" />

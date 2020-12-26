@@ -16,6 +16,9 @@ namespace Core.Reader
         private int index2 { get; set; } = 0;
         private int IndexOffset { get; set; }
 
+        private Random random { get; set; } = new Random();
+        private List<int> sellection { get; set; } = new List<int>();
+
         public ImageFile(int readChannels, string location, int indexoffset = 0)
             : base(readChannels)
         {
@@ -26,8 +29,7 @@ namespace Core.Reader
         protected override void Initialize()
         {
             files = (new System.IO.DirectoryInfo(SourceLocation)).GetFiles();
-            index1 = 0;
-            index2 = IndexOffset;
+            index1 = index2 = 0;
         }
 
         protected override void Get(ref BufferItem buffer)
@@ -37,22 +39,25 @@ namespace Core.Reader
             buffer.Input.ReadFrom(frame1);
 
             var frame2 = new OpenCvSharp.Mat(files[index2].FullName);
-            //OpenCvSharp.Cv2.Laplacian(frame2, frame2, frame2.Type(), 1);
+            //frame2 = frame2.CvtColor(OpenCvSharp.ColorConversionCodes.BGR2RGB);
             buffer.Teacher.ReadFrom(frame2);
 
-            index1++;
-            index2++;
-            if (index1 >= files.Length)
+            sellection.Add(index1);
+            if (sellection.Count >= files.Length)
             {
                 epoch++;
-                index1 = 0;
+                sellection.Clear();
                 files = (new System.IO.DirectoryInfo(SourceLocation)).GetFiles();
+                index1 = random.Next(0, files.Length);
             }
-            if (index2 >= files.Length)
+            else
             {
-                index2 = 0;
+                while (sellection.Contains(index1))
+                {
+                    index1 = random.Next(0, files.Length);
+                }
             }
-
+            index2 = index1;
         }
     }
 }

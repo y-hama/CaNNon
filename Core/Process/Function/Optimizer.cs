@@ -12,6 +12,9 @@ namespace Core.Process.Function
     {
         protected Optimizer() { }
 
+        private static Random random { get; set; } = new Random();
+        public double DropOut { get; set; } = 0;
+
         protected KernelField Kernel { get; private set; }
         public void Initialize(KernelField kernel)
         {
@@ -26,14 +29,20 @@ namespace Core.Process.Function
             UpdateInitial();
             for (int d = 0; d < Kernel.Depth; d++)
             {
-                UpdateBias(Kernel.dBias[d] / batch, ref Kernel.Bias[d], d);
+                if (random.NextDouble() >= DropOut)
+                {
+                    UpdateBias(Kernel.dBias[d] / batch, ref Kernel.Bias[d], d);
+                }
                 for (int c = 0; c < Kernel.Channels; c++)
                 {
                     for (int s = 0; s < Kernel.Size * 2 + 1; s++)
                     {
                         for (int t = 0; t < Kernel.Size * 2 + 1; t++)
                         {
-                            UpdateKernel(Kernel.dBuffer[c][d][s, t] / batch, ref Kernel.Buffer[c][d][s, t], c, d, s, t);
+                            if (random.NextDouble() >= DropOut)
+                            {
+                                UpdateKernel(Kernel.dBuffer[c][d][s, t] / batch, ref Kernel.Buffer[c][d][s, t], c, d, s, t);
+                            }
                         }
                     }
                 }

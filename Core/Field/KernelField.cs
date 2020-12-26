@@ -28,9 +28,9 @@ namespace Core.Field
         public Optimizer Optimizer { get; private set; }
 
         private static Random rsrc { get; set; } = new Random();
-        private static double RamdomBiasMin { get; set; } = 0;
-        private static double RamdomBiasMax { get; set; } = 0;
-        private static double RamdomBufferMin { get; set; } = -0.5;
+        private static double RamdomBiasMin { get; set; } = -0.1;
+        private static double RamdomBiasMax { get; set; } = 0.1;
+        private static double RamdomBufferMin { get; set; } = -1;
         private static double RamdomBufferMax { get; set; } = 1;
 
         public KernelField(int channels, int depth, int size, Optimizer opt)
@@ -87,23 +87,6 @@ namespace Core.Field
                     }
                 }
             }
-
-            //for (int d = 0; d < Depth; d++)
-            //{
-            //    double sum = 0;
-            //    for (int c = 0; c < Channels; c++)
-            //    {
-            //        for (int s = 0; s < Size * 2 + 1; s++)
-            //        {
-            //            for (int t = 0; t < Size * 2 + 1; t++)
-            //            {
-            //                sum += Buffer[c][d][s, t];
-            //            }
-            //        }
-            //    }
-            //    Bias[d] = -sum;// / (Channels * Depth);
-            //}
-
         }
 
         public void dClear()
