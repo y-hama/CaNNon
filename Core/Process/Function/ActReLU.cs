@@ -12,6 +12,8 @@ namespace Core.Process.Function
 {
     class ActReLU : Activator
     {
+        public double Parameter { get; set; } = 0;
+
         public override void Forward(Gpu gpu, BufferField temporaryOutput, ref BufferField output)
         {
             var ow = output.Width;
@@ -20,6 +22,8 @@ namespace Core.Process.Function
             var obuf = output.Buffer;
             var tobuf = temporaryOutput.Buffer;
 
+            var p = Parameter;
+
             gpu.For(0, output.Length, n =>
             {
                 int c = (int)(n / (ow * oh));
@@ -27,7 +31,7 @@ namespace Core.Process.Function
                 int y = (int)(l / ow);
                 int x = l - y * ow;
 
-                obuf[c][x, y] = DeviceFunction.Max(0, tobuf[c][x, y]);
+                obuf[c][x, y] = (tobuf[c][x, y] >= 0) ? tobuf[c][x, y] : (tobuf[c][x, y] * p);
             });
         }
 
@@ -41,6 +45,8 @@ namespace Core.Process.Function
             var sbuf = sigma.Buffer;
             var tobuf = temporaryOutput.Buffer;
 
+            var p = Parameter;
+
             gpu.For(0, temporarySigma.Length, n =>
             {
                 int c = (int)(n / (tsw * tsh));
@@ -48,7 +54,7 @@ namespace Core.Process.Function
                 int y = (int)(l / tsw);
                 int x = l - y * tsw;
 
-                tsbuf[c][x, y] = ((tobuf[c][x, y] >= 0) ? 1 : 0) * sbuf[c][x, y];
+                tsbuf[c][x, y] = ((tobuf[c][x, y] >= 0) ? 1 : p) * sbuf[c][x, y];
             });
         }
     }

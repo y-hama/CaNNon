@@ -19,7 +19,7 @@ namespace Core
     {
         public static void Start()
         {
-            var size = new Size(100, 100);
+            var size = new Size(200, 200);
             int batchCount = 1;
 
             string folderpath = $@"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}\img";
@@ -28,21 +28,21 @@ namespace Core
             {
                 var model = new Model.Model(gpu, new Reader.ImageFile(3, folderpath, 0));
 
+                //model.AddLayer(Process.Layer.Layer.Load(
+                //        new Process.Property.ConvProperty(
+                //            gpu, outChannels: 3,
+                //            dilation: 1, expand: 2, kernelSize: 1,
+                //            opt: new OptAdaBound() { DropOut = 0.25 }, act: new ActReLU() { Parameter = 0.01 })));
+                //model.AddLayer(Process.Layer.Layer.Load(
+                //        new Process.Property.ConvProperty(
+                //            gpu, outChannels: 6,
+                //            dilation: 1, expand: 1, kernelSize: 1,
+                //            opt: new OptAdaBound() { DropOut = 0.25 }, act: new ActReLU() { Parameter = 0.01 })));
                 model.AddLayer(Process.Layer.Layer.Load(
                         new Process.Property.ConvProperty(
                             gpu, outChannels: 3,
-                            dilation: 1, expand: 2, kernelSize: 1,
-                            opt: new OptAdaBound() { DropOut = 0.25 })));
-                model.AddLayer(Process.Layer.Layer.Load(
-                        new Process.Property.ConvProperty(
-                            gpu, outChannels: 6,
                             dilation: 1, expand: 1, kernelSize: 1,
-                            opt: new OptAdaBound() { DropOut = 0.25 }, act: new ActReLU())));
-                model.AddLayer(Process.Layer.Layer.Load(
-                        new Process.Property.ConvProperty(
-                            gpu, outChannels: 3,
-                            dilation: 1, expand: 1, kernelSize: 2,
-                            opt: new OptAdaBound() { DropOut = 0.25 })));
+                            opt: new OptAdaBound() { DropOut = 0.25 }, act: new ActReLU() { Parameter = 0.01 })));
 
                 model.Confirm(size);
 
@@ -55,9 +55,9 @@ namespace Core
                     if (viewcounter % 1 == 0)
                     {
                         viewcounter = 0;
-                        model.Input.Show("in");
-                        model.Teacher.Show("teacher");
-                        model.Output.Show("out");
+                        model.Input.Show("in", 3);
+                        model.Teacher.Show("teacher", 3);
+                        model.Output.Show("out", 3);
                     }
                 }
             }
