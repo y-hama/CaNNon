@@ -39,7 +39,7 @@ namespace Core.Reader
             buffer.Input.ReadFrom(frame1);
 
             var frame2 = new OpenCvSharp.Mat(files[index2].FullName);
-            OpenCvSharp.Cv2.Laplacian(frame2, frame2, frame1.Type(), 1);
+            //OpenCvSharp.Cv2.Laplacian(frame2, frame2, frame1.Type(), 1);
             buffer.Teacher.ReadFrom(frame2);
 
             sellection.Add(index1);

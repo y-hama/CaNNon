@@ -25,6 +25,96 @@ namespace Core.Model
         public BufferField Sigma { get { return Layers[Layers.Count - 1].property.Sigma; } }
         public BufferField Teacher { get; private set; }
 
+        public BufferField ModelField
+        {
+            get
+            {
+                int width = Input.Width, height = Input.Height;
+                List<int> startX = new List<int>() { 0 };
+                for (int i = 0; i < Layers.Count - 1; i++)
+                {
+                    startX.Add(width);
+                    width += Layers[i].property.Output.Width;
+                    height = Math.Max(height, Layers[i].property.Output.Height * Layers[i].property.Output.Channels);
+                }
+                startX.Add(width);
+                width += Layers[Layers.Count - 1].property.Output.Width;
+                height = Math.Max(height, Layers[Layers.Count - 1].property.Output.Height);
+                startX.Add(width);
+                width += Teacher.Width;
+                height = Math.Max(height, Teacher.Height);
+
+                OpenCvSharp.Size size = new OpenCvSharp.Size(width, height);
+                BufferField res = new BufferField(GPU, size, 3);
+
+                int startIndex = 0;
+
+                // Input
+                for (int c = 0; c < Input.Channels; c++)
+                {
+                    for (int x = 0; x < Input.Width; x++)
+                    {
+                        for (int y = 0; y < Input.Height; y++)
+                        {
+                            res.Buffer[c][startX[startIndex] + x, y] = Input.Buffer[c][x, y];
+                        }
+                    }
+                }
+                startIndex++;
+
+                // Middle
+                for (int i = 0; i < Layers.Count - 1; i++)
+                {
+                    var layer = Layers[i];
+                    int offsety = 0;
+                    for (int c = 0; c < layer.property.Output.Channels; c++)
+                    {
+                        for (int x = 0; x < layer.property.Output.Width; x++)
+                        {
+                            for (int y = 0; y < layer.property.Output.Height; y++)
+                            {
+                                double e = layer.property.Output.Buffer[c][x, y];
+                                int cidx = 0;
+                                double scale = 1;
+                                if (e < 0) { scale = -1; cidx = 0; }
+                                else { scale = 1; cidx = 2; }
+                                res.Buffer[cidx][startX[startIndex] + x, y + offsety] = scale * e;
+                            }
+                        }
+                        offsety += layer.property.Output.Height;
+                    }
+                    startIndex++;
+                }
+
+                // Output
+                for (int c = 0; c < Output.Channels; c++)
+                {
+                    for (int x = 0; x < Output.Width; x++)
+                    {
+                        for (int y = 0; y < Output.Height; y++)
+                        {
+                            res.Buffer[c][startX[startIndex] + x, y] = Output.Buffer[c][x, y];
+                        }
+                    }
+                }
+                startIndex++;
+
+                // Teacher
+                for (int c = 0; c < Teacher.Channels; c++)
+                {
+                    for (int x = 0; x < Teacher.Width; x++)
+                    {
+                        for (int y = 0; y < Teacher.Height; y++)
+                        {
+                            res.Buffer[c][startX[startIndex] + x, y] = Teacher.Buffer[c][x, y];
+                        }
+                    }
+                }
+
+                return res;
+            }
+        }
+
         public BufferField HiddenOutput(int index) { return Layers[index].property.Output; }
 
         public BufferField InputField
