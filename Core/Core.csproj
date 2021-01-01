@@ -102,9 +102,13 @@
     <Compile Include="Process\Function\OptAdam.cs" />
     <Compile Include="Process\Function\Optimizer.cs" />
     <Compile Include="Process\Function\OptSGD.cs" />
+    <Compile Include="Process\Function\PoolingBack.cs" />
+    <Compile Include="Process\Function\PoolingForward.cs" />
     <Compile Include="Process\Layer\ConvLayer.cs" />
     <Compile Include="Process\Layer\Layer.cs" />
+    <Compile Include="Process\Layer\PoolingLayer.cs" />
     <Compile Include="Process\Property\ConvProperty.cs" />
+    <Compile Include="Process\Property\PoolingProperty.cs" />
     <Compile Include="Process\Property\Property.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Reader\CaptureToImage.cs" />

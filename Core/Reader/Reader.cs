@@ -13,7 +13,7 @@ namespace Core.Reader
 
         public int ReadChannels { get; private set; }
 
-        private int BufferingSize { get; set; } = 4;
+        private int BufferingSize { get; set; } = 10;
 
         protected int epoch { get; set; } = 0;
 
@@ -60,7 +60,7 @@ namespace Core.Reader
                 }
                 if (!check)
                 {
-                    Console.WriteLine("!Reader BufferWait");
+                    //Console.WriteLine("!Reader BufferWait");
                     System.Threading.Thread.Sleep(1);
                 }
             }

@@ -28,10 +28,10 @@ namespace Core.Field
         public Optimizer Optimizer { get; private set; }
 
         private static Random rsrc { get; set; } = new Random();
-        private static double RamdomBiasMin { get; set; } = -0.1;
-        private static double RamdomBiasMax { get; set; } = 0.1;
-        private static double RamdomBufferMin { get; set; } = -1;
-        private static double RamdomBufferMax { get; set; } = 1;
+        private double RamdomBiasCenter { get; set; } = 0;
+        private double RamdomBiasSigma { get; set; } = 0.01;
+        private double RamdomBufferCenter { get; set; } = 0;
+        private double RamdomBufferSigma { get; set; } = 0.25;
 
         public KernelField(int channels, int depth, int size, Optimizer opt)
         {
@@ -68,6 +68,10 @@ namespace Core.Field
 
         public void Randmize()
         {
+            double areasize = ((Size * 2 + 1) * (Size * 2 + 1));
+            RamdomBiasSigma = 2.0 / (Depth * areasize);
+            RamdomBufferSigma = 2.0 / (Depth * areasize);
+
             double[] bias;
             double[][][,] buffer;
             RandomBias(out bias);
@@ -82,7 +86,7 @@ namespace Core.Field
                     {
                         for (int t = 0; t < Size * 2 + 1; t++)
                         {
-                            Buffer[c][d][s, t] = buffer[c][d][s, t] / ((Size * 2 + 1) * (Size * 2 + 1));
+                            Buffer[c][d][s, t] = buffer[c][d][s, t];
                         }
                     }
                 }
@@ -125,9 +129,14 @@ namespace Core.Field
             }
         }
 
-        private double GetRandomSegment(double min = 0, double max = 1)
+        private double GetRandomSegment(double mu = 0, double sigma = 1)
         {
-            return rsrc.NextDouble() * (max - min) + min;
+            double rand = 0.0;
+            while ((rand = rsrc.NextDouble()) == 0.0) ;
+            double rand2 = rsrc.NextDouble();
+            double normrand = Math.Sqrt(-2.0 * Math.Log(rand)) * Math.Cos(2.0 * Math.PI * rand2);
+            normrand = normrand * sigma + mu;
+            return normrand;
         }
 
         private void RandomBias(out double[] b)
@@ -135,7 +144,7 @@ namespace Core.Field
             b = new double[Depth];
             for (int d = 0; d < Depth; d++)
             {
-                b[d] = GetRandomSegment(RamdomBiasMin, RamdomBiasMax);
+                b[d] = GetRandomSegment(RamdomBiasCenter, RamdomBiasSigma);
             }
         }
 
@@ -152,7 +161,7 @@ namespace Core.Field
                     {
                         for (int t = 0; t < Size * 2 + 1; t++)
                         {
-                            b[c][d][s, t] = GetRandomSegment(RamdomBufferMin, RamdomBufferMax);
+                            b[c][d][s, t] = GetRandomSegment(RamdomBufferCenter, RamdomBufferSigma);
                         }
                     }
                 }

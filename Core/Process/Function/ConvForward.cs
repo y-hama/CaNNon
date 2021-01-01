@@ -54,7 +54,7 @@ namespace Core.Process.Function
                             {
                                 int _i = i / expand;
                                 int _j = j / expand;
-                                if (_i >= 0 && _i < iw && _j > 0 && _j < ih)
+                                if (_i >= 0 && _i < iw && _j >= 0 && _j < ih)
                                 {
                                     v += ibuf[_c][_i, _j] * kbuf[_c][c][s + ks, t + ks];
                                 }

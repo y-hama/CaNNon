@@ -20,13 +20,13 @@ namespace Core.Process.Property
         public BufferField Sigma;
         public BufferField Propagater;
 
-        protected int inCh { get; private set; }
-        protected int inW { get; private set; }
-        protected int inH { get; private set; }
+        protected int inCh { get; set; }
+        protected int inW { get; set; }
+        protected int inH { get; set; }
 
-        protected int outCh { get; private set; }
-        protected int outW { get; private set; }
-        protected int outH { get; private set; }
+        protected int outCh { get; set; }
+        protected int outW { get; set; }
+        protected int outH { get; set; }
 
         protected Property(Gpu gpu, int outChannels)
         {

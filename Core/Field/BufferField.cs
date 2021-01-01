@@ -276,6 +276,38 @@ namespace Core.Field
         }
 
         [GpuManaged()]
+        public void Clear()
+        {
+            int area = Area;
+            int width = Width;
+            int height = Height;
+            var sbuffer = Buffer;
+
+            if (GPU != null)
+            {
+                GPU.For(0, Length, n =>
+                {
+                    int c = (int)(n / area);
+                    int i = n - c * area;
+                    int y = (int)(i / width);
+                    int x = i - y * width;
+                    sbuffer[c][x, y] = 0;
+                });
+            }
+            else
+            {
+                for (int n = 0; n < Length; n++)
+                {
+                    int c = (int)(n / area);
+                    int i = n - c * area;
+                    int y = (int)(i / width);
+                    int x = i - y * width;
+                    sbuffer[c][x, y] = 0;
+                }
+            }
+        }
+
+        [GpuManaged()]
         public void CopyTo(BufferField frame)
         {
             int area = Area;

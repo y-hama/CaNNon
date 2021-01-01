@@ -117,7 +117,7 @@ namespace Core.Process.Function
                             {
                                 int _i = i / expand;
                                 int _j = j / expand;
-                                if (_i >= 0 && _i < sw && _j > 0 && _j < sh)
+                                if (_i >= 0 && _i < sw && _j >= 0 && _j < sh)
                                 {
                                     v += sbuf[_c][_i, _j] * kbuf[c][_c][s + ks, t + ks];
                                 }

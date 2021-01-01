@@ -78,7 +78,12 @@ namespace Core.Model
                                 double scale = 1;
                                 if (e < 0) { scale = -1; cidx = 0; }
                                 else { scale = 1; cidx = 2; }
-                                res.Buffer[cidx][startX[startIndex] + x, y + offsety] = scale * e;
+                                e = scale * e;
+                                res.Buffer[cidx][startX[startIndex] + x, y + offsety] = e;
+                                if (e > 1)
+                                {
+                                    res.Buffer[1][startX[startIndex] + x, y + offsety] = 0.5;
+                                }
                             }
                         }
                         offsety += layer.property.Output.Height;
