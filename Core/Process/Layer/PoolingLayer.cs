@@ -24,12 +24,19 @@ namespace Core.Process.Layer
 
         public override void Back()
         {
-            back.Process(Property.GPU);
+            back.Process(Property.GPU,
+                Property.Sigma, Property.Map,
+                Property.Reduction, Property.Expansion,
+                ref Property.Propagater);
+            DifferenceSum += Property.Sigma.AbsSum / Property.Sigma.Length;
+            BatchCount++;
         }
 
         public override void Update()
         {
             Property.Map.Clear();
+            DifferenceSum = 0;
+            BatchCount = 0;
         }
     }
 }

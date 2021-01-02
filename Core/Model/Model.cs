@@ -145,9 +145,9 @@ namespace Core.Model
             Reader = reader;
         }
 
-        public void AddLayer(Process.Layer.Layer layer)
+        public void AddLayer(Process.Property.Property property)
         {
-            Layers.Add(layer);
+            Layers.Add(Process.Layer.Layer.Load(property));
         }
 
         public void Confirm(OpenCvSharp.Size sourceSize)

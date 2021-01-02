@@ -12,37 +12,39 @@ using OpenCvSharp;
 using Core.Common;
 using Core.Field;
 using Core.Process.Function;
+using Core.Process.Property;
 
 namespace Core
 {
     public static class Loader
     {
+
+        private static void CreateLayer(Gpu gpu, ref Model.Model model)
+        {
+            model.AddLayer(new ConvProperty(gpu, 6, 1, 1, 1, new OptAdaBound(), new ActReLU() { Parameter = 0.01 }));
+            model.AddLayer(new PoolingProperty(gpu, 2, 1));
+            model.AddLayer(new ConvProperty(gpu, 12, 1, 1, 1, new OptAdaBound(), new ActReLU() { Parameter = 0.01 }));
+            model.AddLayer(new PoolingProperty(gpu, 2, 1));
+            model.AddLayer(new ConvProperty(gpu, 24, 1, 1, 1, new OptAdaBound(), new ActReLU() { Parameter = 0.01 }));
+            model.AddLayer(new ConvProperty(gpu, 12, 1, 1, 1, new OptAdaBound(), new ActReLU() { Parameter = 0.01 }));
+            model.AddLayer(new PoolingProperty(gpu, 1, 2));
+            model.AddLayer(new ConvProperty(gpu, 6, 1, 1, 1, new OptAdaBound(), new ActReLU() { Parameter = 0.01 }));
+            model.AddLayer(new PoolingProperty(gpu, 1, 2));
+            model.AddLayer(new ConvProperty(gpu, 3, 1, 1, 1, new OptAdaBound(), new ActReLU() { Parameter = 0.01 }));
+        }
+
         public static void Start()
         {
-            var size = new Size(128, 128);
-            int batchCount = 3;
+            var size = new Size(64, 64);
+            int batchCount = 1;
 
-            string folderpath = $@"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}\clothes";
+            string folderpath = $@"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}\img";
 
             using (var gpu = Gpu.Default)
             {
                 var model = new Model.Model(gpu, new Reader.ImageFile(3, folderpath, 0));
 
-                //model.AddLayer(Process.Layer.Layer.Load(
-                //        new Process.Property.ConvProperty(
-                //            gpu, outChannels: 8,
-                //            dilation: 1, expand: 1, kernelSize: 1,
-                //            opt: new OptAdaBound() { DropOut = 0 }, act: new ActReLU() { Parameter = 0.01 })));
-                model.AddLayer(Process.Layer.Layer.Load(
-                    new Process.Property.PoolingProperty(
-                        gpu, reduction: 2, expansion: 1
-                        )));
-                model.AddLayer(Process.Layer.Layer.Load(
-                        new Process.Property.ConvProperty(
-                            gpu, outChannels: 3,
-                            dilation: 1, expand: 1, kernelSize: 1,
-                            opt: new OptAdaBound() { DropOut = 0 }, act: new ActReLU() { Parameter = 0.01 })));
-
+                CreateLayer(gpu, ref model);
                 model.Confirm(size);
 
                 int viewcounter = 0;
@@ -53,7 +55,7 @@ namespace Core
                     viewcounter++;
                     if (viewcounter % 1 == 0)
                     {
-                        model.ModelField.Show("modelfield");
+                        model.ModelField.Show("modelfield",2);
                     }
                 }
             }

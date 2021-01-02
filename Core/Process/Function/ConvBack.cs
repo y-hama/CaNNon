@@ -96,8 +96,7 @@ namespace Core.Process.Function
             #endregion
 
             #region Calculate Propagater
-            //gpu.For(0, propagater.Length, n =>
-            for (int n = 0; n < propagater.Length; n++)
+            gpu.For(0, propagater.Length, n =>
             {
                 int c = (int)(n / (pw * ph));
                 int l = n - c * (pw * ph);
@@ -126,8 +125,7 @@ namespace Core.Process.Function
                     }
                 }
                 pbuf[c][x, y] = v;
-            }
-            //);
+            });
             #endregion
         }
     }
