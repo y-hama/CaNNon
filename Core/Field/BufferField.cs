@@ -206,7 +206,7 @@ namespace Core.Field
 
             if (scale != 1)
             {
-                frame = frame.Resize(new Size(), scale, scale, InterpolationFlags.Linear);
+                frame = frame.Resize(new Size(), scale, scale, InterpolationFlags.Area);
             }
 
             var arg = new ShowRequestArgument() { Title = title, Frame = frame };
@@ -221,6 +221,7 @@ namespace Core.Field
             while (true)
             {
                 int count = int.MaxValue;
+                bool check = false;
                 while (count > 0)
                 {
                     ShowRequestArgument arg = null;
@@ -234,14 +235,19 @@ namespace Core.Field
                     }
                     if (arg != null)
                     {
+                        check = true;
                         Cv2.ImShow(arg.Title, arg.Frame);
+                        Cv2.WaitKey(1);
                     }
                 }
-
-                Cv2.WaitKey(100);
+                if (!check)
+                {
+                    Cv2.WaitKey(1);
+                }
             }
         }
 
+        
         public void DifferenceOf(BufferField inf, ref BufferField otf)
         {
             int area = Area;
@@ -275,7 +281,7 @@ namespace Core.Field
             }
         }
 
-        [GpuManaged()]
+        
         public void Clear()
         {
             int area = Area;
@@ -307,7 +313,7 @@ namespace Core.Field
             }
         }
 
-        [GpuManaged()]
+        
         public void CopyTo(BufferField frame)
         {
             int area = Area;
@@ -340,7 +346,7 @@ namespace Core.Field
             }
         }
 
-        [GpuManaged()]
+        
         private void FrameToBuffer(double[][] _vector)
         {
             int area = Area;
@@ -372,7 +378,7 @@ namespace Core.Field
             }
         }
 
-        [GpuManaged()]
+        
         private void BufferToFrame(ref double[][] _vector)
         {
             int area = Area;

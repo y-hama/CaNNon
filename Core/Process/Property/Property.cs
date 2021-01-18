@@ -45,7 +45,7 @@ namespace Core.Process.Property
             int _outW = 0, _outH = 0;
 
             Adjustment(width, height, out _outW, out _outH);
-            outW = _outH; outH = _outH;
+            outW = _outW; outH = _outH;
 
             var inS = new OpenCvSharp.Size(inW, inH);
             var outS = new OpenCvSharp.Size(outW, outH);

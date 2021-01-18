@@ -10,3 +10,5 @@
 /packages
 /Core/bin/Release
 /CaNNon/bin/Release
+/ConfUI/obj/Debug
+/ConfUI/bin/Debug

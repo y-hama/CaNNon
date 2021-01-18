@@ -16,6 +16,7 @@ namespace Core.Process.Layer
         public override void Forward()
         {
             forward.Process(Property.GPU,
+                Property.Type,
                 Property.Input,
                 Property.Reduction, Property.Expansion,
                 ref Property.Map, ref Property.Output
@@ -25,6 +26,7 @@ namespace Core.Process.Layer
         public override void Back()
         {
             back.Process(Property.GPU,
+                Property.Type,
                 Property.Sigma, Property.Map,
                 Property.Reduction, Property.Expansion,
                 ref Property.Propagater);
@@ -34,9 +36,7 @@ namespace Core.Process.Layer
 
         public override void Update()
         {
-            Property.Map.Clear();
-            DifferenceSum = 0;
-            BatchCount = 0;
+            Property.Map.Clear(); 
         }
     }
 }

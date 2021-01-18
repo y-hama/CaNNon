@@ -17,7 +17,7 @@ namespace Core.Process.Function
 {
     class ConvBack
     {
-        [GpuManaged()]
+        
         public void Process(Gpu gpu, BufferField input, BufferField sigma, int dilation, int expand, ref BufferField propagater, ref KernelField kernel)
         {
             var iw = input.Width;
@@ -54,7 +54,7 @@ namespace Core.Process.Function
                         ddb += sbuf[c][x, y];
                     }
                 }
-                dkbias[c] = db + (ddb / (sw * sh * ic));
+                dkbias[c] = db + (ddb / (sw * sh));
             });
 
             gpu.For(0, (2 * ks + 1) * (2 * ks + 1), n =>
@@ -89,7 +89,7 @@ namespace Core.Process.Function
                                 }
                             }
                         }
-                        dkbuf[c][d][s, t] = dk + ((ddk / (sw * sh * (2 * (ks - 1) + 1))) / DeviceFunction.Sqrt(cnk));
+                        dkbuf[c][d][s, t] = dk + ((ddk / (sw * sh * (2 * (ks - 1) + 1))));
                     }
                 }
             });

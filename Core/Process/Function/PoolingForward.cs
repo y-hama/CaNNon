@@ -13,13 +13,25 @@ namespace Core.Process.Function
 {
     class PoolingForward
     {
-        [GpuManaged()]
-        public void Process(Gpu gpu, BufferField input, int reduction, int expansion, ref BufferField map, ref BufferField output)
+
+        public void Process(Gpu gpu, Property.PoolingProperty.PoolType type, BufferField input, int reduction, int expansion, ref BufferField map, ref BufferField output)
         {
-            Max(gpu, input, reduction, expansion, ref map, ref output);
+            switch (type)
+            {
+                case Property.PoolingProperty.PoolType.Max:
+                    Max(gpu, input, reduction, expansion, ref map, ref output);
+                    break;
+                case Property.PoolingProperty.PoolType.Min:
+                    Min(gpu, input, reduction, expansion, ref map, ref output);
+                    break;
+                case Property.PoolingProperty.PoolType.Average:
+                    Average(gpu, input, reduction, expansion, ref map, ref output);
+                    break;
+                default:
+                    break;
+            }
         }
 
-        [GpuManaged()]
         private void Max(Gpu gpu, BufferField input, int reduction, int expansion, ref BufferField map, ref BufferField output)
         {
             var iw = input.Width;
@@ -42,6 +54,7 @@ namespace Core.Process.Function
                 int x = l - y * ow;
 
                 double pool = double.MinValue;
+                bool check = false;
                 for (int i = 0; i < reduction; i++)
                 {
                     for (int j = 0; j < reduction; j++)
@@ -51,10 +64,12 @@ namespace Core.Process.Function
                         double _ibuf = ibuf[c][_x, _y];
                         if (_ibuf > pool)
                         {
+                            check = true;
                             pool = _ibuf;
                         }
                     }
                 }
+                if (!check) { pool = 0; }
                 for (int i = 0; i < reduction; i++)
                 {
                     for (int j = 0; j < reduction; j++)
@@ -79,7 +94,6 @@ namespace Core.Process.Function
             });
         }
 
-        [GpuManaged()]
         private void Min(Gpu gpu, BufferField input, int reduction, int expansion, ref BufferField map, ref BufferField output)
         {
             var iw = input.Width;
@@ -139,7 +153,6 @@ namespace Core.Process.Function
             });
         }
 
-        [GpuManaged()]
         private void Average(Gpu gpu, BufferField input, int reduction, int expansion, ref BufferField map, ref BufferField output)
         {
             var iw = input.Width;

@@ -69,8 +69,12 @@ namespace Core.Field
         public void Randmize()
         {
             double areasize = ((Size * 2 + 1) * (Size * 2 + 1));
-            RamdomBiasSigma = 2.0 / (Depth * areasize);
-            RamdomBufferSigma = 2.0 / (Depth * areasize);
+
+            RamdomBiasSigma = 2.0 / (Channels * areasize);
+            //RamdomBiasCenter = RamdomBiasSigma / 2;
+
+            RamdomBufferSigma = 2.0 / (Channels * areasize);
+            //RamdomBufferCenter = RamdomBufferSigma / 2;
 
             double[] bias;
             double[][][,] buffer;
@@ -86,7 +90,11 @@ namespace Core.Field
                     {
                         for (int t = 0; t < Size * 2 + 1; t++)
                         {
-                            Buffer[c][d][s, t] = buffer[c][d][s, t];
+                            double e = 0;
+                            //if (s == Size && t == Size && c == d) { e = (0.5); }
+                            if (s == Size && t == Size) { e += (RamdomBufferSigma / 1); }
+                            e += buffer[c][d][s, t];
+                            Buffer[c][d][s, t] = e;
                         }
                     }
                 }

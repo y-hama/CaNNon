@@ -111,8 +111,11 @@
     <Compile Include="Process\Property\PoolingProperty.cs" />
     <Compile Include="Process\Property\Property.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Reader\Adjust\ImageFileAdjust.cs" />
+    <Compile Include="Reader\Capture.cs" />
     <Compile Include="Reader\CaptureToImage.cs" />
     <Compile Include="Reader\ImageFile.cs" />
+    <Compile Include="Reader\RandomToImage.cs" />
     <Compile Include="Reader\Reader.cs" />
   </ItemGroup>
   <ItemGroup>

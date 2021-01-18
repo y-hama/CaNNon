@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Alea;
 using Core.Field;
 
 namespace Core.Model
@@ -23,7 +24,7 @@ namespace Core.Model
         public BufferField Input { get { return Layers[0].property.Input; } }
         public BufferField Output { get { return Layers[Layers.Count - 1].property.Output; } }
         public BufferField Sigma { get { return Layers[Layers.Count - 1].property.Sigma; } }
-        public BufferField Teacher { get; private set; }
+        public BufferField Teacher { get; private set; } = null;
 
         public BufferField ModelField
         {
@@ -41,8 +42,11 @@ namespace Core.Model
                 width += Layers[Layers.Count - 1].property.Output.Width;
                 height = Math.Max(height, Layers[Layers.Count - 1].property.Output.Height);
                 startX.Add(width);
-                width += Teacher.Width;
-                height = Math.Max(height, Teacher.Height);
+                if (null != Teacher)
+                {
+                    width += Teacher.Width;
+                    height = Math.Max(height, Teacher.Height + Sigma.Height);
+                }
 
                 OpenCvSharp.Size size = new OpenCvSharp.Size(width, height);
                 BufferField res = new BufferField(GPU, size, 3);
@@ -69,6 +73,10 @@ namespace Core.Model
                     int offsety = 0;
                     for (int c = 0; c < layer.property.Output.Channels; c++)
                     {
+                        double max = layer.property.Output.Buffer[c].Cast<double>().Max();
+                        double min = layer.property.Output.Buffer[c].Cast<double>().Min();
+                        double abs = Math.Max(Math.Abs(max), Math.Abs(min));
+                        abs = abs == 0 ? 1 : abs;
                         for (int x = 0; x < layer.property.Output.Width; x++)
                         {
                             for (int y = 0; y < layer.property.Output.Height; y++)
@@ -82,7 +90,7 @@ namespace Core.Model
                                 res.Buffer[cidx][startX[startIndex] + x, y + offsety] = e;
                                 if (e > 1)
                                 {
-                                    res.Buffer[1][startX[startIndex] + x, y + offsety] = 0.5;
+                                    res.Buffer[1][startX[startIndex] + x, y + offsety] = e / abs;
                                 }
                             }
                         }
@@ -104,14 +112,32 @@ namespace Core.Model
                 }
                 startIndex++;
 
-                // Teacher
-                for (int c = 0; c < Teacher.Channels; c++)
+                if (null != Teacher)
                 {
-                    for (int x = 0; x < Teacher.Width; x++)
+                    // Teacher
+                    for (int c = 0; c < Teacher.Channels; c++)
                     {
-                        for (int y = 0; y < Teacher.Height; y++)
+                        for (int x = 0; x < Teacher.Width; x++)
                         {
-                            res.Buffer[c][startX[startIndex] + x, y] = Teacher.Buffer[c][x, y];
+                            for (int y = 0; y < Teacher.Height; y++)
+                            {
+                                res.Buffer[c][startX[startIndex] + x, y] = Teacher.Buffer[c][x, y];
+                            }
+                        }
+                    }
+
+                    // Sigma
+                    if (null != Sigma)
+                    {
+                        for (int c = 0; c < Sigma.Channels; c++)
+                        {
+                            for (int x = 0; x < Sigma.Width; x++)
+                            {
+                                for (int y = 0; y < Sigma.Height; y++)
+                                {
+                                    res.Buffer[c][startX[startIndex] + x, y + Sigma.Height] = Math.Abs(Sigma.Buffer[c][x, y]);
+                                }
+                            }
                         }
                     }
                 }
@@ -137,12 +163,13 @@ namespace Core.Model
             }
         }
 
-        private Reader.Reader Reader { get; set; }
+        private Reader.Reader LearningReader { get; set; } = null;
+        public Reader.Reader InferenceReader { get; set; } = null;
 
         public Model(Alea.Gpu gpu, Reader.Reader reader)
         {
             GPU = gpu;
-            Reader = reader;
+            LearningReader = reader;
         }
 
         public void AddLayer(Process.Property.Property property)
@@ -152,7 +179,7 @@ namespace Core.Model
 
         public void Confirm(OpenCvSharp.Size sourceSize)
         {
-            Layers[0].property.SetInputSize(sourceSize.Width, sourceSize.Height, Reader.ReadChannels);
+            Layers[0].property.SetInputSize(sourceSize.Width, sourceSize.Height, LearningReader.ReadChannels);
             for (int i = 1; i < Layers.Count; i++)
             {
                 Layers[i].property.SetInputSize(
@@ -167,14 +194,29 @@ namespace Core.Model
                 Layers[i].property.Sigma = Layers[i + 1].property.Propagater;
             }
 
-            Reader.ModelReflection(GPU, new Common.ModelEdgeParameter()
+            if (LearningReader != null)
             {
-                InputSize = new OpenCvSharp.Size(Layers[0].property.Input.Width, Layers[0].property.Input.Height),
-                InputChannels = Layers[0].property.Input.Channels,
-                OutputSize = new OpenCvSharp.Size(Layers[Layers.Count - 1].property.Output.Width, Layers[Layers.Count - 1].property.Output.Height),
-                OutputChannels = Layers[Layers.Count - 1].property.Output.Channels,
-            });
-            Reader.Start();
+                LearningReader.ModelReflection(GPU, new Common.ModelEdgeParameter()
+                {
+                    InputSize = new OpenCvSharp.Size(Layers[0].property.Input.Width, Layers[0].property.Input.Height),
+                    InputChannels = Layers[0].property.Input.Channels,
+                    OutputSize = new OpenCvSharp.Size(Layers[Layers.Count - 1].property.Output.Width, Layers[Layers.Count - 1].property.Output.Height),
+                    OutputChannels = Layers[Layers.Count - 1].property.Output.Channels,
+                });
+                LearningReader.Start();
+            }
+
+            if (InferenceReader != null)
+            {
+                InferenceReader.ModelReflection(GPU, new Common.ModelEdgeParameter()
+                {
+                    InputSize = new OpenCvSharp.Size(Layers[0].property.Input.Width, Layers[0].property.Input.Height),
+                    InputChannels = Layers[0].property.Input.Channels,
+                    OutputSize = new OpenCvSharp.Size(Layers[Layers.Count - 1].property.Output.Width, Layers[Layers.Count - 1].property.Output.Height),
+                    OutputChannels = Layers[Layers.Count - 1].property.Output.Channels,
+                });
+                InferenceReader.Start();
+            }
         }
 
         public void Learn(Field.BufferField input, Field.BufferField teacher)
@@ -185,9 +227,44 @@ namespace Core.Model
 
         public void Learn(int batchcount)
         {
+            foreach (var layer in Layers)
+            {
+                layer.Refresh();
+            }
             for (int b = 0; b < batchcount; b++)
             {
-                var buf = Reader.GetBuffer();
+                var buf = LearningReader.GetBuffer();
+
+                //var r = new Random();
+                //double segvl = 0;
+                //for (int c = 0; c < buf.Input.Channels; c++)
+                //    for (int i = 0; i < buf.Input.Width; i++)
+                //        for (int j = 0; j < buf.Input.Height; j++)
+                //        {
+                //            buf.Input.Buffer[c][i, j] = segvl;
+                //        }
+                //buf.Input.Buffer[0][r.Next(0, buf.Input.Width / 2), r.Next(0, buf.Input.Height / 2)] = 1 - segvl;
+                //buf.Input.Buffer[1][r.Next(0, buf.Input.Width), 0] = 1 - segvl;
+                //buf.Input.Buffer[2][0, r.Next(0, buf.Input.Height)] = 1 - segvl;
+
+                //double segvh = 0.5;
+                //for (int c = 0; c < buf.Teacher.Channels; c++)
+                //    for (int i = 0; i < buf.Teacher.Width; i++)
+                //        for (int j = 0; j < buf.Teacher.Height; j++)
+                //        {
+                //            buf.Teacher.Buffer[c][i, j] = segvh;
+                //        }
+                //for (int i = 0; i < 10; i++)
+                //{
+                //    for (int j = 0; j < 10; j++)
+                //    {
+                //        buf.Teacher.Buffer[2][3 + i, 3 - 1 + j] = 1 - segvh;
+                //        buf.Teacher.Buffer[2][3 + i, 3 + 1 + j] = 1 - segvh;
+                //        buf.Teacher.Buffer[1][0 + i, 0 + j] = 1 - segvh;
+                //        buf.Teacher.Buffer[0][3 - 1 + i, 3 + j] = 1 - segvh;
+                //    }
+                //}
+
                 InferenceProcess(buf.Input);
                 LearnProcess(buf.Teacher);
                 Generation++;
@@ -198,7 +275,7 @@ namespace Core.Model
             Update();
         }
 
-        public void Update()
+        private void Update()
         {
             Difference = Layers[Layers.Count - 1].Difference;
             foreach (var item in Layers)
@@ -207,10 +284,13 @@ namespace Core.Model
             }
         }
 
-        public void Inference(Field.BufferField input, ref Field.BufferField output)
+        public void Inference()
         {
-            InferenceProcess(input);
-            Layers[Layers.Count - 1].property.Output.CopyTo(output);
+            Teacher?.Clear();
+            Sigma?.Clear();
+            var reader = InferenceReader != null ? InferenceReader : LearningReader;
+            var buf = reader.GetBuffer();
+            InferenceProcess(buf.Input);
         }
 
         private void InferenceProcess(Field.BufferField input)

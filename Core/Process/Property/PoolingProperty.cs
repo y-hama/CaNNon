@@ -14,6 +14,14 @@ namespace Core.Process.Property
     {
         public override Type Connection => typeof(Layer.PoolingLayer);
 
+        public enum PoolType
+        {
+            Max,
+            Min,
+            Average,
+        }
+        public PoolType Type { get; set; } = PoolingProperty.PoolType.Max;
+
         public int Reduction = 1;
         public int Expansion = 1;
 

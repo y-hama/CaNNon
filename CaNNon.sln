@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaNNon", "CaNNon\CaNNon.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Core\Core.csproj", "{4AE190B2-9E5C-4F47-850F-7E20006BCEE0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfUI", "ConfUI\ConfUI.csproj", "{444268CE-884D-40E0-91AC-A5875EC4F051}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{4AE190B2-9E5C-4F47-850F-7E20006BCEE0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4AE190B2-9E5C-4F47-850F-7E20006BCEE0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4AE190B2-9E5C-4F47-850F-7E20006BCEE0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{444268CE-884D-40E0-91AC-A5875EC4F051}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{444268CE-884D-40E0-91AC-A5875EC4F051}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{444268CE-884D-40E0-91AC-A5875EC4F051}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{444268CE-884D-40E0-91AC-A5875EC4F051}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

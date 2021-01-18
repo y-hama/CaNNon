@@ -17,7 +17,6 @@ namespace Core.Process.Function
 {
     class ConvForward
     {
-        [GpuManaged()]
         public void Process(Gpu gpu, BufferField input, KernelField kernel, int dilation, int expand, ref BufferField output)
         {
             var iw = input.Width;

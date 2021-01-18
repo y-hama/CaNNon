@@ -31,16 +31,14 @@ namespace Core.Process.Layer
                 Property.Dilation, Property.Expand,
                 ref property.Propagater, ref Property.Kernel);
 
-            DifferenceSum += Property.Sigma.AbsSum / Property.Sigma.Length;
-            BatchCount++;
+            this.DifferenceSum += Property.Sigma.AbsSum / Property.Sigma.Length;
+            this.BatchCount++;
         }
 
         public override void Update()
         {
             Property.Kernel.Update(BatchCount);
             Property.Kernel.dClear();
-            DifferenceSum = 0;
-            BatchCount = 0;
         }
     }
 }

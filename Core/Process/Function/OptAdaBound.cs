@@ -11,7 +11,7 @@ namespace Core.Process.Function
     class OptAdaBound : Optimizer
     {
         const double a = 0.001;
-        const double a_ = 0.1;
+        const double a_ = 0.05;
         const double b1 = 0.9;
         const double b2 = 0.999;
         const double ep = 10e-8;

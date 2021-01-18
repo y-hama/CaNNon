@@ -11,9 +11,11 @@ namespace Core.Reader
         private object __queuelock = new object();
         private Queue<BufferItem> ItemQueue { get; set; } = new Queue<BufferItem>();
 
+        private static System.Threading.Thread gcThread { get; set; } = null;
+
         public int ReadChannels { get; private set; }
 
-        private int BufferingSize { get; set; } = 10;
+        protected virtual int BufferingSize { get; } = 10;
 
         protected int epoch { get; set; } = 0;
 
@@ -86,28 +88,56 @@ namespace Core.Reader
                     while (true)
                     {
                         bool check = false;
+                        bool condition = false;
                         lock (__queuelock)
                         {
-                            if (ItemQueue.Count < BufferingSize)
+                            condition = ItemQueue.Count < BufferingSize;
+                        }
+
+                        if (condition)
+                        {
+                            var item = Source.Congruence();
+                            Get(ref item);
+                            lock (__queuelock)
                             {
-                                var item = Source.Congruence();
-                                Get(ref item);
                                 ItemQueue.Enqueue(item);
-                                check = true;
                             }
+                            check = true;
                         }
                         if (!check) { System.Threading.Thread.Sleep(1); }
-                        else { /*Console.WriteLine($"Reader : Load-> c/{ItemQueue.Count}");*/ }
+                        else
+                        {
+                            //Console.WriteLine($"Reader : Load-> c/{ItemQueue.Count}");
+                        }
                     }
                 }).Start();
-                new System.Threading.Thread(() =>
+            }
+
+            if (null == gcThread)
+            {
+                gcThread = new System.Threading.Thread(() =>
                 {
                     while (true)
                     {
                         GC.Collect();
                         System.Threading.Thread.Sleep(1000);
                     }
-                }).Start();
+                });
+                gcThread.Start();
+            }
+        }
+
+        protected void RandomNoize(ref Field.BufferField f, double noize, Random random)
+        {
+            for (int c = 0; c < f.Channels; c++)
+            {
+                for (int i = 0; i < f.Width; i++)
+                {
+                    for (int j = 0; j < f.Height; j++)
+                    {
+                        f.Buffer[c][i, j] += (random.NextDouble() * 2 - 1) * noize;
+                    }
+                }
             }
         }
     }

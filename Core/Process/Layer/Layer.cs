@@ -37,5 +37,11 @@ namespace Core.Process.Layer
             property.Output.Show("output" + title);
         }
 
+        public void Refresh()
+        {
+            DifferenceSum = 0;
+            BatchCount = 0;
+        }
+
     }
 }
